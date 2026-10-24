@@ -2,6 +2,11 @@
 
 An enterprise-grade, tactile Neomorphic Progressive Web Application (PWA) designed for circular economy waste management, instant financial incentives, and regulatory compliance under India's Extended Producer Responsibility (CPCB EPR) framework.
 
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20on%20GitHub%20Pages-2ECC71?style=for-the-badge&logo=github)](https://ankit-yadav-8.github.io/Sociothon/)
+[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge)](https://github.com/Ankit-yadav-8/Sociothon)
+
+🌐 **Live Application URL**: [https://ankit-yadav-8.github.io/Sociothon/](https://ankit-yadav-8.github.io/Sociothon/)
+
 ---
 
 ## 🌟 Key Innovations & Architecture
