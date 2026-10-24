@@ -92,50 +92,6 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LIVE SYSTEM ACTIVITY TICKER
-   ═══════════════════════════════════════════════════════════ */
-.neo-ticker-bar {
-  background: var(--neo-bg);
-  padding: 0.65rem 1.5rem;
-  border-top: 1px solid var(--border-light);
-  border-bottom: 1px solid var(--border-light);
-  box-shadow: var(--shadow-inset-sm);
-}
-
-.neo-ticker-content {
-  max-width: 1300px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.ticker-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--neo-green);
-  font-weight: 700;
-}
-
-.ticker-text {
-  flex: 1;
-  margin: 0 1.5rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ═══════════════════════════════════════════════════════════
    HERO SECTION
    ═══════════════════════════════════════════════════════════ */
 .neo-hero {

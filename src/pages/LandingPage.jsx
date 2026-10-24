@@ -120,15 +120,6 @@ const WASTE_SAMPLES = [
   }
 ];
 
-// Live simulated transactions across India
-const LIVE_TRANSACTIONS = [
-  '⚡ Bangalore Ward 4 Kiosk: 18.4 kg PET Clear bottles deposited (+₹303.60 settled via UPI)',
-  '🌿 IIT Delhi Mess: 64.5 kg organic kitchen scraps converted to 12.8 kg dry feed via Mill Recycler',
-  '🚚 Pune Volunteer Hub: Collection route #104 completed — 128 kg segregated HDPE verified',
-  '📜 CPCB EPR Portal: 420 Metric Ton EPR plastic credits registered for Britannia Industries',
-  '🔋 Hyderabad Urban Mining Safe: 5.6 kg Li-Ion battery modules logged with cryptographic SHA-256 hash'
-];
-
 export default function LandingPage() {
   const { user, getDashboardPath } = useAuth();
   
@@ -142,15 +133,6 @@ export default function LandingPage() {
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
-
-  // Live Ticker State
-  const [tickerIndex, setTickerIndex] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTickerIndex(prev => (prev + 1) % LIVE_TRANSACTIONS.length);
-    }, 3800);
-    return () => clearInterval(timer);
-  }, []);
 
   // AI Scanner Playground State
   const [selectedSample, setSelectedSample] = useState(WASTE_SAMPLES[0]);
@@ -256,24 +238,6 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
-
-      {/* ═══════════════════════════════════════════════════════════
-          LIVE TRANSACTION ACTIVITY TICKER
-          ═══════════════════════════════════════════════════════════ */}
-      <div className="neo-ticker-bar">
-        <div className="neo-ticker-content">
-          <div className="ticker-badge">
-            <span className="pulse-led" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--neo-green)', display: 'inline-block' }}></span>
-            <span>LIVE TELEMETRY</span>
-          </div>
-          <div className="ticker-text" key={tickerIndex}>
-            {LIVE_TRANSACTIONS[tickerIndex]}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            CPCB v2.4 Compliant
-          </div>
-        </div>
-      </div>
 
       {/* ═══════════════════════════════════════════════════════════
           HERO SECTION WITH INTEGRATED AI SCANNER PREVIEW
