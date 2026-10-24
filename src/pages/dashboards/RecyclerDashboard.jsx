@@ -48,14 +48,16 @@ export default function RecyclerDashboard() {
   }, []);
 
   // Filter lots delivered to this facility or delivered campus-wide
-  const incomingShipments = collections.filter(c => 
-    c.status === 'DELIVERED' && (!c.assignedRecycler || c.assignedRecycler.id === selectedRecyclerId)
+  const safeCollections = Array.isArray(collections) ? collections : [];
+  const incomingShipments = safeCollections.filter(c => 
+    c && c.status === 'DELIVERED' && (!c.assignedRecycler || c.assignedRecycler.id === selectedRecyclerId)
   );
 
-  const verifiedShipments = collections.filter(c => 
-    (c.status === 'DELIVERY_VERIFIED' || c.status === 'PAID') && 
+  const verifiedShipments = safeCollections.filter(c => 
+    c && (c.status === 'DELIVERY_VERIFIED' || c.status === 'PAID') && 
     (!c.assignedRecycler || c.assignedRecycler.id === selectedRecyclerId)
   );
+
 
   const handleOpenIntakeModal = (lot) => {
     setActiveLotForIntake(lot);

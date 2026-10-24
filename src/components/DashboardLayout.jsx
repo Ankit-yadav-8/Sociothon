@@ -344,8 +344,8 @@ export default function DashboardLayout() {
                 {user?.avatar || 'U'}
               </div>
               <div className="header-profile-name" style={{ lineHeight: 1.2 }}>
-                <span style={{ fontSize: '0.84rem', fontWeight: 700, display: 'block' }}>{user?.name?.split(' ')[0]}</span>
-                <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>{roleLabels[user?.role] || user?.role}</span>
+                <span style={{ fontSize: '0.84rem', fontWeight: 700, display: 'block' }}>{(user?.name || 'Admin').split(' ')[0]}</span>
+                <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>{roleLabels[user?.role] || user?.role || 'Admin'}</span>
               </div>
               <ChevronDown size={14} />
 
@@ -356,8 +356,8 @@ export default function DashboardLayout() {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                    <strong>{user?.name}</strong>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{user?.email}</div>
+                    <strong>{user?.name || 'Administrator'}</strong>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{user?.email || 'admin@ecoloop.in'}</div>
                   </div>
                   <NavLink to="/dashboard/scanner" className="neo-btn" style={{ width: '100%', fontSize: '0.8rem', justifyContent: 'flex-start', marginBottom: '0.35rem' }}>
                     <Camera size={14} /> Open AI Scanner

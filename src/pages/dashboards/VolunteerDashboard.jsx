@@ -146,10 +146,13 @@ export default function VolunteerDashboard() {
     }
   };
 
-  const activeCategoryObj = rates.find(r => r.id === newCategory) || rates[0];
-  const pendingProposals = collections.filter(c => c.status === 'PROPOSED');
-  const activePickups = collections.filter(c => ['VOLUNTEER_ACCEPTED', 'COLLECTED', 'ADMIN_APPROVED', 'RECYCLER_ASSIGNED', 'DELIVERED'].includes(c.status));
-  const completedCollections = collections.filter(c => c.status === 'PAID');
+  const safeRates = Array.isArray(rates) ? rates : [];
+  const safeCollections = Array.isArray(collections) ? collections : [];
+  const activeCategoryObj = safeRates.find(r => r && r.id === newCategory) || safeRates[0] || { id: 'plastic_pet', name: 'PET Bottles', ratePerKg: 18 };
+  const pendingProposals = safeCollections.filter(c => c && c.status === 'PROPOSED');
+  const activePickups = safeCollections.filter(c => c && ['VOLUNTEER_ACCEPTED', 'COLLECTED', 'ADMIN_APPROVED', 'RECYCLER_ASSIGNED', 'DELIVERED'].includes(c.status));
+  const completedCollections = safeCollections.filter(c => c && c.status === 'PAID');
+
 
   return (
     <div className="container-max" style={{ paddingBottom: '3rem' }}>

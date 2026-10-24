@@ -424,7 +424,17 @@ class PlatformStore {
   getStorage(key, defaultValue) {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_PREFIX + key);
-      return saved ? JSON.parse(saved) : defaultValue;
+      if (!saved || saved === 'null' || saved === 'undefined') {
+        return defaultValue;
+      }
+      const parsed = JSON.parse(saved);
+      if (parsed === null || parsed === undefined) {
+        return defaultValue;
+      }
+      if (Array.isArray(defaultValue) && !Array.isArray(parsed)) {
+        return defaultValue;
+      }
+      return parsed;
     } catch (e) {
       console.warn('Storage read failed:', key, e);
       return defaultValue;
@@ -700,21 +710,25 @@ class PlatformStore {
 
   // ─── 6. 10-STAGE GARBAGE COLLECTION & PROPOSAL WORKFLOW ───
   getCollections() {
-    return this.getStorage('collections', INITIAL_COLLECTIONS);
+    const list = this.getStorage('collections', INITIAL_COLLECTIONS);
+    return Array.isArray(list) ? list : INITIAL_COLLECTIONS;
   }
 
   getCollectionsForVolunteer(volunteerId) {
     if (!volunteerId) return [];
-    return this.getCollections().filter(c => c.volunteerId === volunteerId);
+    const list = this.getCollections();
+    return Array.isArray(list) ? list.filter(c => c && c.volunteerId === volunteerId) : [];
   }
 
   getCollectionsForCollector(collectorId) {
     if (!collectorId) return [];
-    return this.getCollections().filter(c => c.collectorId === collectorId);
+    const list = this.getCollections();
+    return Array.isArray(list) ? list.filter(c => c && c.collectorId === collectorId) : [];
   }
 
   getCollectionById(id) {
-    return this.getCollections().find(c => c.id === id);
+    const list = this.getCollections();
+    return Array.isArray(list) ? list.find(c => c && c.id === id) : null;
   }
 
   // Step 2: Collector creates proposal
@@ -1135,8 +1149,10 @@ class PlatformStore {
   }
 
   getCollectionsForRecycler(recyclerId) {
-    if (!recyclerId) return this.getCollections().filter(c => c.status === 'DELIVERED' || c.status === 'RECYCLER_ASSIGNED' || c.status === 'DELIVERY_VERIFIED');
-    return this.getCollections().filter(c => c.assignedRecycler?.id === recyclerId || c.status === 'DELIVERED' || c.status === 'RECYCLER_ASSIGNED' || c.status === 'DELIVERY_VERIFIED');
+    const list = this.getCollections();
+    if (!Array.isArray(list)) return [];
+    if (!recyclerId) return list.filter(c => c && (c.status === 'DELIVERED' || c.status === 'RECYCLER_ASSIGNED' || c.status === 'DELIVERY_VERIFIED'));
+    return list.filter(c => c && (c.assignedRecycler?.id === recyclerId || c.status === 'DELIVERED' || c.status === 'RECYCLER_ASSIGNED' || c.status === 'DELIVERY_VERIFIED'));
   }
 
   // Step 9 & 10: Authorize Reward & Execute Payment (Instant UPI Payout)
@@ -1331,17 +1347,18 @@ class PlatformStore {
   }
 
   getPlatformStats() {
-    const users = this.getUsers();
-    const collections = this.getCollections();
-    const volunteers = users.filter(u => u.role === 'volunteer');
-    const collectors = users.filter(u => u.role === 'collector');
-    const emailLogs = this.getEmailLogs();
+    const users = Array.isArray(this.getUsers()) ? this.getUsers() : [];
+    const collections = Array.isArray(this.getCollections()) ? this.getCollections() : [];
+    const volunteers = users.filter(u => u && u.role === 'volunteer');
+    const collectors = users.filter(u => u && u.role === 'collector');
+    const emailLogs = Array.isArray(this.getEmailLogs()) ? this.getEmailLogs() : [];
 
     let totalWeightCollectedKg = 0;
     let totalPaymentsDisbursed = 0;
     let pendingApprovalsCount = 0;
 
     collections.forEach(c => {
+      if (!c) return;
       const kg = c.actualWeightKg || c.proposedWeightKg || 0;
       totalWeightCollectedKg += kg;
       if (c.status === 'PAID' && c.payment) {
@@ -1352,7 +1369,7 @@ class PlatformStore {
       }
     });
 
-    const verifiedUsersCount = users.filter(u => u.isEmailVerified).length;
+    const verifiedUsersCount = users.filter(u => u && u.isEmailVerified).length;
     const verificationRate = users.length > 0 ? Math.round((verifiedUsersCount / users.length) * 100) : 0;
 
     return {

@@ -258,7 +258,9 @@ export default function CollectorDashboard() {
   };
 
   // Filter Collections
-  const filteredCollections = collections.filter(c => {
+  const safeCollections = Array.isArray(collections) ? collections : [];
+  const filteredCollections = safeCollections.filter(c => {
+    if (!c) return false;
     if (activeTab === 'proposed') return c.status === 'PROPOSED';
     if (activeTab === 'accepted') return c.status === 'VOLUNTEER_ACCEPTED';
     if (activeTab === 'collected') return c.status === 'COLLECTED';
@@ -311,7 +313,7 @@ export default function CollectorDashboard() {
           <div className="neo-card-sm" style={{ borderLeft: '4px solid var(--neo-green)' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Active Proposals</div>
             <div className="font-display" style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--neo-green-dark)', marginTop: '0.25rem' }}>
-              {collections.filter(c => c.status === 'PROPOSED').length}
+              {safeCollections.filter(c => c && c.status === 'PROPOSED').length}
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Awaiting volunteer confirmation</span>
           </div>
@@ -319,7 +321,7 @@ export default function CollectorDashboard() {
           <div className="neo-card-sm" style={{ borderLeft: '4px solid var(--neo-blue)' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Ready for Physical Pickup</div>
             <div className="font-display" style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--neo-blue)', marginTop: '0.25rem' }}>
-              {collections.filter(c => c.status === 'VOLUNTEER_ACCEPTED').length}
+              {safeCollections.filter(c => c && c.status === 'VOLUNTEER_ACCEPTED').length}
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Volunteer accepted • Go collect</span>
           </div>
@@ -327,7 +329,7 @@ export default function CollectorDashboard() {
           <div className="neo-card-sm" style={{ borderLeft: '4px solid var(--neo-orange)' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Total Collected Weight</div>
             <div className="font-display" style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--neo-orange)', marginTop: '0.25rem' }}>
-              {collections.reduce((sum, c) => sum + (c.actualWeightKg || c.proposedWeightKg || 0), 0).toFixed(1)} <span style={{ fontSize: '0.875rem' }}>kg</span>
+              {safeCollections.reduce((sum, c) => sum + (c ? (c.actualWeightKg || c.proposedWeightKg || 0) : 0), 0).toFixed(1)} <span style={{ fontSize: '0.875rem' }}>kg</span>
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Across all materials</span>
           </div>
@@ -335,10 +337,11 @@ export default function CollectorDashboard() {
           <div className="neo-card-sm" style={{ borderLeft: '4px solid var(--neo-purple)' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Recycler Transfers</div>
             <div className="font-display" style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--neo-purple)', marginTop: '0.25rem' }}>
-              {collections.filter(c => ['RECYCLER_ASSIGNED', 'DELIVERED', 'PAID'].includes(c.status)).length}
+              {safeCollections.filter(c => c && ['RECYCLER_ASSIGNED', 'DELIVERED', 'PAID'].includes(c.status)).length}
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Dispatched to plant</span>
           </div>
+
         </div>
       </div>
 
@@ -602,12 +605,13 @@ export default function CollectorDashboard() {
             <span style={{ fontSize: '0.8125rem', fontWeight: 700 }}>Filter Worklist:</span>
             <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto' }}>
               {[
-                { id: 'all', label: `All (${collections.length})` },
-                { id: 'proposed', label: `Awaiting Volunteer (${collections.filter(c => c.status === 'PROPOSED').length})` },
-                { id: 'accepted', label: `Ready to Collect (${collections.filter(c => c.status === 'VOLUNTEER_ACCEPTED').length})` },
-                { id: 'collected', label: `Admin Review (${collections.filter(c => c.status === 'COLLECTED').length})` },
-                { id: 'recycler', label: `Recycler Orders (${collections.filter(c => ['RECYCLER_ASSIGNED', 'DELIVERED', 'DELIVERY_VERIFIED'].includes(c.status)).length})` },
+                { id: 'all', label: `All (${safeCollections.length})` },
+                { id: 'proposed', label: `Awaiting Volunteer (${safeCollections.filter(c => c && c.status === 'PROPOSED').length})` },
+                { id: 'accepted', label: `Ready to Collect (${safeCollections.filter(c => c && c.status === 'VOLUNTEER_ACCEPTED').length})` },
+                { id: 'collected', label: `Admin Review (${safeCollections.filter(c => c && c.status === 'COLLECTED').length})` },
+                { id: 'recycler', label: `Recycler Orders (${safeCollections.filter(c => c && ['RECYCLER_ASSIGNED', 'DELIVERED', 'DELIVERY_VERIFIED'].includes(c.status)).length})` },
               ].map(t => (
+
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}

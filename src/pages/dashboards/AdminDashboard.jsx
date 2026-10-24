@@ -136,10 +136,11 @@ export default function AdminDashboard() {
   };
 
   // Filtered collections
-  const pendingApprovals = collections.filter(c => c.status === 'COLLECTED');
-  const readyForRecycler = collections.filter(c => c.status === 'ADMIN_APPROVED');
-  const pendingDeliveries = collections.filter(c => c.status === 'DELIVERED');
-  const verifiedForPayment = collections.filter(c => c.status === 'DELIVERY_VERIFIED');
+  const safeCollections = Array.isArray(collections) ? collections : [];
+  const pendingApprovals = safeCollections.filter(c => c && c.status === 'COLLECTED');
+  const readyForRecycler = safeCollections.filter(c => c && c.status === 'ADMIN_APPROVED');
+  const pendingDeliveries = safeCollections.filter(c => c && c.status === 'DELIVERED');
+  const verifiedForPayment = safeCollections.filter(c => c && c.status === 'DELIVERY_VERIFIED');
 
   return (
     <div className="container-max" style={{ paddingBottom: '3rem' }}>
