@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Users, Recycle, TrendingUp, IndianRupee, ArrowUpRight, ArrowDownRight,
-  MapPin, Clock, CheckCircle2, AlertTriangle, Package, Truck, Shield,
+  ArrowRight, MapPin, Clock, CheckCircle2, AlertTriangle, Package, Truck, Shield,
   Award, Building2, Sliders, Mail, FileText, Check, X, Search, RefreshCw,
   Plus, Edit2, ExternalLink
 } from 'lucide-react';
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
           <div className="neo-card-sm" style={{ borderLeft: '4px solid #2ECC71' }}>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Disbursed UPI Payouts</div>
             <div className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2ECC71', marginTop: '0.2rem' }}>
-              ₹{stats.totalPaymentsDisbursed.toFixed(2)}
+              ₹{(stats?.totalPaymentsDisbursed || 0).toFixed(2)}
             </div>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Zero transaction fees</span>
           </div>
@@ -310,11 +310,12 @@ export default function AdminDashboard() {
                   <div style={{ textAlign: 'center', padding: '0 1rem' }}>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Measured Tare</div>
                     <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.35rem', fontWeight: 800 }}>
-                      {item.actualWeightKg} kg
+                      {item.actualWeightKg || 0} kg
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--accent-green)', fontWeight: 700 }}>
-                      Rate: ₹{item.ratePerKg.toFixed(2)}/kg $\rightarrow$ ₹{(item.actualWeightKg * item.ratePerKg).toFixed(2)}
+                      Rate: ₹{(item.ratePerKg || 0).toFixed(2)}/kg $\rightarrow$ ₹{((item.actualWeightKg || 0) * (item.ratePerKg || 0)).toFixed(2)}
                     </div>
+
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -494,11 +495,12 @@ export default function AdminDashboard() {
                       <div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Authorized Payment Amount</div>
                         <div className="font-display" style={{ fontSize: '1.65rem', fontWeight: 900, color: 'var(--accent-green)' }}>
-                          ₹{item.finalReward?.toFixed(2) || (item.actualWeightKg * item.ratePerKg).toFixed(2)}
+                          ₹{(item.finalReward || ((item.actualWeightKg || 0) * (item.ratePerKg || 0)) || 0).toFixed(2)}
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          Rate: ₹{item.ratePerKg.toFixed(2)}/kg × {item.actualWeightKg} kg
+                          Rate: ₹{(item.ratePerKg || 0).toFixed(2)}/kg × {item.actualWeightKg || 0} kg
                         </div>
+
                       </div>
 
                       <button
@@ -569,8 +571,9 @@ export default function AdminDashboard() {
                         </div>
                       ) : (
                         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-green)' }}>
-                          ₹{r.ratePerKg.toFixed(2)} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>/ kg</span>
+                          ₹{(r.ratePerKg || 0).toFixed(2)} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>/ kg</span>
                         </span>
+
                       )}
                     </td>
                     <td>
