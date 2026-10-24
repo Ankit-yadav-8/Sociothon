@@ -2125,41 +2125,58 @@ export default function AIScanner() {
         >
           <div
             className="neo-card-lg"
-            style={{ maxWidth: '680px', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            style={{
+              maxWidth: '700px',
+              width: '100%',
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              padding: '1.5rem',
+              background: 'var(--bg-card, #111827)',
+              color: 'var(--text-primary, #f9fafb)',
+              borderRadius: '20px',
+              border: '1px solid var(--border-medium, rgba(255,255,255,0.15))',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.5)'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-light)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <div className="neo-circle-btn" style={{ width: '40px', height: '40px', background: 'var(--neo-green)', color: '#fff', flexShrink: 0 }}>
-                  <CheckCircle2 size={22} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-subtle, rgba(255,255,255,0.1))', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #059669)', color: '#ffffff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(16,185,129,0.35)' }}>
+                  <CheckCircle2 size={24} />
                 </div>
                 <div>
-                  <h3 className="font-display" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
+                  <h3 className="font-display" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--text-primary, #ffffff)' }}>
                     Official Waste Deposit Receipt
                   </h3>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)', fontWeight: 500 }}>
                     डिजिटल कचरा जमा एवं भुगतान रसीद • Campus Waste Certified
                   </span>
                 </div>
               </div>
-              <button className="neo-circle-btn" style={{ width: '36px', height: '36px' }} onClick={() => setShowJsonModal(false)}>
+              <button
+                className="neo-circle-btn"
+                style={{ width: '36px', height: '36px', color: 'var(--text-primary, #ffffff)', background: 'var(--bg-tertiary, rgba(255,255,255,0.08))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.1))' }}
+                onClick={() => setShowJsonModal(false)}
+              >
                 ✕
               </button>
             </div>
 
             {/* View Mode Toggle: Village-Friendly Simple Receipt vs Technical CPCB JSON */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', background: 'var(--bg-tertiary)', padding: '0.3rem', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.85rem', background: 'var(--bg-tertiary, #1e293b)', padding: '0.3rem', borderRadius: '12px', flexShrink: 0 }}>
               <button
                 className={`neo-btn ${!showRawJsonView ? 'active neo-btn-primary' : ''}`}
-                style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem', fontWeight: 700 }}
+                style={{ flex: 1, fontSize: '0.82rem', padding: '0.5rem', fontWeight: 700 }}
                 onClick={() => setShowRawJsonView(false)}
               >
                 📄 आसान रसीद (Simple Receipt)
               </button>
               <button
                 className={`neo-btn ${showRawJsonView ? 'active neo-btn-primary' : ''}`}
-                style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem', fontWeight: 700 }}
+                style={{ flex: 1, fontSize: '0.82rem', padding: '0.5rem', fontWeight: 700 }}
                 onClick={() => setShowRawJsonView(true)}
               >
                 💻 CPCB Government Audit (JSON Code)
@@ -2168,124 +2185,124 @@ export default function AIScanner() {
 
             {/* Body: Simple Village-Friendly Format */}
             {!showRawJsonView ? (
-              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.35rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                 
                 {/* Highlight Payout & Slip Card */}
-                <div className="neo-inset" style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, rgba(46, 204, 113, 0.12), rgba(52, 152, 219, 0.08))', border: '1px solid rgba(46, 204, 113, 0.35)' }}>
+                <div style={{ padding: '1.15rem', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(59, 130, 246, 0.12))', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <div>
-                      <span className="neo-badge neo-badge-green" style={{ fontSize: '0.75rem', marginBottom: '0.4rem', fontWeight: 800 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(16, 185, 129, 0.25)', color: '#10B981', padding: '0.25rem 0.65rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid rgba(16, 185, 129, 0.4)' }}>
                         <Check size={12} /> भुगतान सफल • Payment Settled via UPI
                       </span>
-                      <div className="font-display" style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--neo-green-dark)', lineHeight: 1.1 }}>
+                      <div className="font-display" style={{ fontSize: '2.1rem', fontWeight: 900, color: '#10B981', lineHeight: 1.1, marginTop: '0.4rem' }}>
                         ₹{(lastTraceJson.financial_incentive?.inr_payout || (weightKg * currentItem.inrPerKg)).toFixed(2)}
                       </div>
-                      <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'block', marginTop: '0.2rem' }}>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary, #94a3b8)', display: 'block', marginTop: '0.2rem' }}>
                         सीधे बैंक खाते / UPI में जमा (Instant Bank Payout)
                       </span>
                     </div>
 
-                    <div className="neo-card-sm" style={{ textAlign: 'right', padding: '0.6rem 0.85rem' }}>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Green Points</span>
-                      <div className="font-display" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--neo-green-dark)' }}>
+                    <div style={{ textAlign: 'right', padding: '0.6rem 0.85rem', borderRadius: '10px', background: 'var(--bg-secondary, rgba(0,0,0,0.25))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary, #64748b)', textTransform: 'uppercase', fontWeight: 800 }}>Green Points</span>
+                      <div className="font-display" style={{ fontSize: '1.3rem', fontWeight: 900, color: '#10B981' }}>
                         +{(lastTraceJson.financial_incentive?.points_credited || (weightKg * currentItem.valuePerKg)).toFixed(2)} pts
                       </div>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>1 pt = ₹1.00 Value</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted, #64748b)' }}>1 pt = ₹1.00 Value</span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px dashed rgba(46, 204, 113, 0.3)', fontSize: '0.8rem', color: 'var(--text-secondary)', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <span>रसीद संख्या (Slip No): <strong style={{ color: 'var(--text-primary)' }}>{lastTraceJson.event_id}</strong></span>
-                    <span>तारीख व समय (Date &amp; Time): <strong style={{ color: 'var(--text-primary)' }}>{new Date(lastTraceJson.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</strong></span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.65rem', borderTop: '1px dashed rgba(16, 185, 129, 0.35)', fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span>रसीद संख्या (Slip No): <strong style={{ color: 'var(--text-primary, #ffffff)', fontFamily: 'monospace' }}>{lastTraceJson.event_id}</strong></span>
+                    <span>तारीख व समय (Date &amp; Time): <strong style={{ color: 'var(--text-primary, #ffffff)' }}>{new Date(lastTraceJson.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</strong></span>
                   </div>
                 </div>
 
                 {/* 4-Card Clear Waste Specification Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-                  <div className="neo-card-sm" style={{ padding: '0.85rem' }}>
+                  <div style={{ padding: '0.85rem', borderRadius: '12px', background: 'var(--bg-secondary, rgba(255,255,255,0.04))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>🍾</span>
+                      <span style={{ fontSize: '1.3rem' }}>🍾</span>
                       <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase' }}>क्या जमा किया (Item Type)</span>
-                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>{currentItem.name}</div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary, #64748b)', fontWeight: 800, textTransform: 'uppercase' }}>क्या जमा किया (Item Type)</span>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary, #ffffff)' }}>{currentItem.name}</div>
                       </div>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: currentItem.color, fontWeight: 700 }}>{currentItem.code} • {currentItem.polymer}</span>
+                    <span style={{ fontSize: '0.75rem', color: currentItem.color || '#10B981', fontWeight: 700 }}>{currentItem.code} • {currentItem.polymer}</span>
                   </div>
 
-                  <div className="neo-card-sm" style={{ padding: '0.85rem' }}>
+                  <div style={{ padding: '0.85rem', borderRadius: '12px', background: 'var(--bg-secondary, rgba(255,255,255,0.04))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>⚖️</span>
+                      <span style={{ fontSize: '1.3rem' }}>⚖️</span>
                       <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase' }}>तौला गया वज़न (Net Mass)</span>
-                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary, #64748b)', fontWeight: 800, textTransform: 'uppercase' }}>तौला गया वज़न (Net Mass)</span>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary, #ffffff)' }}>
                           {((lastTraceJson.mass_g || 450) / 1000).toFixed(2)} kg ({lastTraceJson.mass_g || 450} ग्राम)
                         </div>
                       </div>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--neo-green-dark)', fontWeight: 700 }}>डिजिटल तराजू पर प्रमाणित (Tare Calibrated)</span>
+                    <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>डिजिटल तराजू पर प्रमाणित (Tare Calibrated)</span>
                   </div>
 
-                  <div className="neo-card-sm" style={{ padding: '0.85rem' }}>
+                  <div style={{ padding: '0.85rem', borderRadius: '12px', background: 'var(--bg-secondary, rgba(255,255,255,0.04))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>✨</span>
+                      <span style={{ fontSize: '1.3rem' }}>✨</span>
                       <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase' }}>सफाई व शुद्धता (Quality)</span>
-                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--neo-green-dark)' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary, #64748b)', fontWeight: 800, textTransform: 'uppercase' }}>सफाई व शुद्धता (Quality)</span>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#10B981' }}>
                           {((lastTraceJson.confidence_score || 0.94) * 100).toFixed(1)}% उच्च गुणवत्ता (Super Grade)
                         </div>
                       </div>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>धुला हुआ, सूखा एवं ढक्कन अलग</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #94a3b8)' }}>धुला हुआ, सूखा एवं ढक्कन अलग</span>
                   </div>
 
-                  <div className="neo-card-sm" style={{ padding: '0.85rem' }}>
+                  <div style={{ padding: '0.85rem', borderRadius: '12px', background: 'var(--bg-secondary, rgba(255,255,255,0.04))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>🗑️</span>
+                      <span style={{ fontSize: '1.3rem' }}>🗑️</span>
                       <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase' }}>डिपॉजिट बिन (Which Bin)</span>
-                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>Slot #01 • Blue Bin A</div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary, #64748b)', fontWeight: 800, textTransform: 'uppercase' }}>डिपॉजिट बिन (Which Bin)</span>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary, #ffffff)' }}>Slot #01 • Blue Bin A</div>
                       </div>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--neo-blue)', fontWeight: 700 }}>उच्च शुद्धता रीसाइक्लिंग डिब्बा</span>
+                    <span style={{ fontSize: '0.75rem', color: '#3B82F6', fontWeight: 700 }}>उच्च शुद्धता रीसाइक्लिंग डिब्बा</span>
                   </div>
                 </div>
 
                 {/* Where Was It Deposited? */}
-                <div className="neo-card-sm" style={{ padding: '0.85rem 1rem' }}>
+                <div style={{ padding: '0.85rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary, rgba(255,255,255,0.04))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                    <MapPin size={20} color="var(--accent-green)" />
+                    <MapPin size={20} color="#10B981" />
                     <div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 800 }}>जमा केंद्र का नाम व पता (Collection Depot)</div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>{lastTraceJson.station_name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{station.ward} • GPS: {station.lat}° N, {station.lng}° E</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary, #64748b)', textTransform: 'uppercase', fontWeight: 800 }}>जमा केंद्र का नाम व पता (Collection Depot)</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary, #ffffff)' }}>{lastTraceJson.station_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #94a3b8)' }}>{station.ward} • GPS: {station.lat}° N, {station.lng}° E</div>
                     </div>
                   </div>
                 </div>
 
                 {/* What Happens Next? (आगे इस कचरे का क्या बनेगा?) */}
-                <div className="neo-inset" style={{ padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)' }}>
-                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Factory size={15} color="var(--neo-green-dark)" /> आगे क्या बनेगा? (Up-Cycling Journey)
+                <div style={{ padding: '0.85rem 1rem', borderRadius: '12px', background: 'var(--bg-tertiary, #1e293b)', border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
+                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, color: 'var(--text-tertiary, #64748b)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Factory size={15} color="#10B981" /> आगे क्या बनेगा? (Up-Cycling Journey)
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, marginBottom: '0.35rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-primary, #ffffff)', lineHeight: 1.4, marginBottom: '0.35rem' }}>
                     ⚙️ <strong>Campus EcoSynthesizer मशीन</strong> द्वारा यह प्लास्टिक <strong>"{currentItem.machineOutput}"</strong> में तब्दील किया जाएगा।
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary, #94a3b8)' }}>
                     🏭 थोक लॉट प्रमाणित रीसाइक्लर (Reliance Circular / Supreme) को भेजा जाता है।
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: '#27AE60', fontWeight: 700, marginTop: '0.35rem' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#10B981', fontWeight: 700, marginTop: '0.35rem' }}>
                     🌿 <strong>+{(((lastTraceJson.mass_g || 450) / 1000) * currentItem.co2PerKg).toFixed(2)} kg CO₂ वायु प्रदूषण रोका गया!</strong> स्वच्छ भारत में आपका योगदान।
                   </div>
                 </div>
 
                 {/* Security Guarantee & Digital Hash Seal */}
-                <div style={{ padding: '0.65rem 0.85rem', background: 'rgba(52, 152, 219, 0.08)', borderRadius: '8px', border: '1px solid rgba(52, 152, 219, 0.25)', fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem' }}>
+                <div style={{ padding: '0.65rem 0.85rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.25)', fontSize: '0.75rem', color: 'var(--text-secondary, #94a3b8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <ShieldCheck size={16} color="var(--neo-blue)" />
-                    <span>डिजिटल सुरक्षा मुहर (SHA-256): <code style={{ color: 'var(--text-primary)' }}>{lastTraceJson.provenance_hash?.substring(0, 20)}...</code></span>
+                    <ShieldCheck size={16} color="#3B82F6" />
+                    <span>डिजिटल सुरक्षा मुहर (SHA-256): <code style={{ color: 'var(--text-primary, #ffffff)', fontFamily: 'monospace' }}>{lastTraceJson.provenance_hash?.substring(0, 20)}...</code></span>
                   </div>
-                  <span style={{ color: 'var(--neo-green-dark)', fontWeight: 700 }}>CPCB Govt. Approved</span>
+                  <span style={{ color: '#10B981', fontWeight: 700 }}>CPCB Govt. Approved</span>
                 </div>
 
               </div>
@@ -2296,6 +2313,7 @@ export default function AIScanner() {
                   className="neo-inset"
                   style={{
                     flex: 1,
+                    minHeight: 0,
                     overflowY: 'auto',
                     fontSize: '0.78rem',
                     fontFamily: 'monospace',
@@ -2312,10 +2330,10 @@ export default function AIScanner() {
             )}
 
             {/* Modal Footer Actions */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-light)', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-subtle, rgba(255,255,255,0.1))', flexWrap: 'wrap', flexShrink: 0 }}>
               <button
                 className="neo-btn"
-                style={{ fontSize: '0.8rem', padding: '0.5rem 0.85rem' }}
+                style={{ fontSize: '0.82rem', padding: '0.55rem 0.95rem' }}
                 onClick={() => window.print()}
                 title="Print this receipt"
               >
@@ -2325,14 +2343,14 @@ export default function AIScanner() {
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   className="neo-btn"
-                  style={{ fontSize: '0.8rem', padding: '0.5rem 0.85rem' }}
+                  style={{ fontSize: '0.82rem', padding: '0.55rem 0.95rem' }}
                   onClick={downloadJsonTrace}
                 >
                   <Download size={14} /> Download .json
                 </button>
                 <button
                   className="neo-btn neo-btn-primary"
-                  style={{ fontSize: '0.8rem', padding: '0.5rem 1.25rem' }}
+                  style={{ fontSize: '0.82rem', padding: '0.55rem 1.25rem' }}
                   onClick={() => setShowJsonModal(false)}
                 >
                   Close (बंद करें)
