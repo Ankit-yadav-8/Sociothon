@@ -79,7 +79,7 @@ export default function DashboardLayout() {
             </div>
             {sidebarOpen && (
               <span className="font-display" style={{ fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
-                Eco<span style={{ color: 'var(--neo-green-dark)' }}>Loop</span>
+                Loop<span style={{ color: 'var(--neo-green-dark)' }}>IIT</span>
               </span>
             )}
           </NavLink>
