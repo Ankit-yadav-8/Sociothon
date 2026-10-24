@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, createContext, useContext } from 'react';
 import { Toaster } from 'react-hot-toast';
 import LandingPage from './pages/LandingPage';
