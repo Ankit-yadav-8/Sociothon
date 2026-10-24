@@ -754,3 +754,269 @@
     text-align: center;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   FEATURE: ON-SITE MACHINE & RECYCLER MARKETPLACE STYLES
+   ═══════════════════════════════════════════════════════════ */
+.machine-recyclers-section {
+  padding: 6rem 2rem;
+  max-width: 1320px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.machine-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 980px) {
+  .machine-grid-layout {
+    grid-template-columns: 1fr;
+  }
+  .machine-recyclers-section {
+    padding: 4rem 1.5rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOOPIIT: SOCIOTHON 2026 PRESENTATION SPECIFIC COMPONENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Problem Analysis Matrix (Slide 2) */
+.solution-matrix-section {
+  padding: 5.5rem 2rem;
+  max-width: 1320px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.matrix-table-wrapper {
+  overflow-x: auto;
+  margin-top: 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-card);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.matrix-table th {
+  padding: 1.15rem 1.25rem;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 800;
+  border-bottom: 2px solid var(--border-medium);
+  letter-spacing: 0.02em;
+}
+
+.matrix-table td {
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.matrix-table tr:hover td {
+  background: var(--bg-tertiary);
+}
+
+.matrix-badge-crit {
+  display: inline-block;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--accent-red);
+}
+
+.matrix-badge-sol {
+  display: inline-block;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--accent-green-subtle);
+  color: var(--accent-green);
+}
+
+/* The Five Loops Grid (Slide 3) */
+.five-loops-section {
+  padding: 6rem 2rem;
+  max-width: 1320px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.five-loops-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.25rem;
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 1100px) {
+  .five-loops-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .five-loops-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.loop-card {
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  justifyContent: space-between;
+}
+
+.loop-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent-green);
+  box-shadow: 0 12px 30px var(--accent-green-glow);
+}
+
+.loop-number {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--accent-green);
+  margin-bottom: 0.5rem;
+}
+
+/* 7 AI/ML Modules Showcase (Slide 5-6) */
+.aiml-modules-section {
+  padding: 6rem 2rem;
+  max-width: 1320px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.modules-tabs-nav {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.module-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.module-nav-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+.module-nav-btn.active {
+  background: var(--accent-green-subtle);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+}
+
+/* Grad-CAM Heatmap Simulation Overlay */
+.gradcam-preview-box {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  height: 380px;
+  background: #0A0E17;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+}
+
+.gradcam-heatmap {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 48% 52%, rgba(239, 68, 68, 0.75) 0%, rgba(234, 179, 8, 0.6) 28%, rgba(59, 130, 246, 0.35) 55%, transparent 75%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 4;
+  animation: pulse-heatmap 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-heatmap {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 0.95; transform: scale(1.03); }
+}
+
+/* Hash-Chained Ledger Visualizer (Slide 7) */
+.ledger-chain-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.ledger-block {
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+.ledger-block.valid {
+  border-left: 5px solid var(--accent-green);
+}
+
+.ledger-block.tampered {
+  border-left: 5px solid var(--accent-red);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* Judge Q&A Strategy Grid (Slide 13) */
+.judge-qa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 860px) {
+  .judge-qa-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

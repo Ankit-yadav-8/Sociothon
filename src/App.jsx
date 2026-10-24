@@ -15,6 +15,7 @@ import Tracking from './pages/Tracking';
 import Analytics from './pages/Analytics';
 import Pickups from './pages/Pickups';
 import EPRCredits from './pages/EPRCredits';
+import WasteToProductMachine from './pages/WasteToProductMachine';
 
 export const AuthContext = createContext(null);
 
@@ -25,7 +26,10 @@ export function useAuth() {
 function App() {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('ecoloop_user');
-    return saved ? JSON.parse(saved) : null;
+    if (saved) return JSON.parse(saved);
+    const demoUser = { name: 'Priya Sharma (Demo)', role: 'admin', email: 'admin@ecoloop.in', avatar: 'PS' };
+    localStorage.setItem('ecoloop_user', JSON.stringify(demoUser));
+    return demoUser;
   });
 
   const login = (userData) => {
@@ -81,6 +85,7 @@ function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="pickups" element={<Pickups />} />
             <Route path="epr-credits" element={<EPRCredits />} />
+            <Route path="machine" element={<WasteToProductMachine />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" />} />

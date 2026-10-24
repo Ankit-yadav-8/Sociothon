@@ -4,7 +4,7 @@ import { useAuth } from '../App';
 import {
   Recycle, LayoutDashboard, Camera, ShoppingBag, MapPin, BarChart3,
   Truck, Award, Bell, Settings, LogOut, Menu, X, ChevronDown,
-  Search, Moon, Sun, User, Sparkles, Zap, Building2, Users, Shield
+  Search, Moon, Sun, User, Sparkles, Zap, Building2, Users, Shield, Factory
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './DashboardLayout.css';
@@ -13,6 +13,7 @@ const getNavItems = (role) => {
   return [
     { path: `/dashboard/${role}`, icon: LayoutDashboard, label: 'Dashboard', end: true },
     { path: '/dashboard/scanner', icon: Camera, label: 'AI Scanner & Deposit', highlight: true },
+    { path: '/dashboard/machine', icon: Factory, label: 'EcoSynthesizer & Recyclers', highlight: true },
     { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'B2B Marketplace' },
     { path: '/dashboard/tracking', icon: MapPin, label: 'MRF & Logistics' },
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Impact Analytics' },
