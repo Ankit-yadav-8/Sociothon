@@ -36,8 +36,14 @@ jobs:
       - name: Copy index.html to 404.html
         run: cp dist/index.html dist/404.html
 
+      - name: Prepare Vercel static deployment compatibility for gh-pages branch
+        run: |
+          node -e 'fs.writeFileSync("dist/package.json", JSON.stringify({ name: "campus-waste-static", private: true, scripts: { build: "echo static release ready" } }, null, 2))'
+          node -e 'fs.writeFileSync("dist/vercel.json", JSON.stringify({ cleanUrls: true, rewrites: [{ source: "/(.*)", destination: "/index.html" }] }, null, 2))'
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+
