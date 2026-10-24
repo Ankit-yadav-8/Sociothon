@@ -12,19 +12,31 @@ import { useAuth } from '../../App';
 export default function VolunteerDashboard() {
   const { user } = useAuth();
   
+  const DEFAULT_VOLUNTEER = {
+    id: 'USR-VOL-001',
+    name: 'Ananya Deshmukh',
+    role: 'volunteer',
+    email: 'volunteer@ecoloop.in',
+    volunteerId: 'VOL-2026-E47A91BC',
+    emailVerified: true,
+    upiId: 'ananya@okhdfcbank',
+    avatar: 'AD',
+    address: 'Sarojini Bhawan Room 204, IIT Roorkee'
+  };
+
   // Real or active volunteer profile
   const [currentVolunteer, setCurrentVolunteer] = useState(() => {
     // If logged in user is volunteer, retrieve their full profile from store
     const storeUser = platformStore.getUserByEmail(user?.email || 'volunteer@ecoloop.in');
-    return storeUser || platformStore.getUsers().find(u => u.role === 'volunteer');
+    return storeUser || (platformStore.getUsers() && platformStore.getUsers().find(u => u.role === 'volunteer')) || DEFAULT_VOLUNTEER;
   });
 
   const [metrics, setMetrics] = useState(() => 
-    platformStore.getVolunteerMetrics(currentVolunteer?.volunteerId)
+    platformStore.getVolunteerMetrics(currentVolunteer?.volunteerId || DEFAULT_VOLUNTEER.volunteerId)
   );
 
   const [collections, setCollections] = useState(() =>
-    platformStore.getCollectionsForVolunteer(currentVolunteer?.volunteerId)
+    platformStore.getCollectionsForVolunteer(currentVolunteer?.volunteerId || DEFAULT_VOLUNTEER.volunteerId)
   );
 
   const [rates] = useState(platformStore.getRewardRates());

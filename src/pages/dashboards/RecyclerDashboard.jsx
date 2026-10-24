@@ -25,7 +25,18 @@ export default function RecyclerDashboard() {
   const [intakeSlipNo, setIntakeSlipNo] = useState('');
   const [inspectorNotes, setInspectorNotes] = useState('Passed optical purity & contamination inspection. All garbage received securely in full.');
 
-  const activeRecycler = recyclers.find(r => r.id === selectedRecyclerId) || recyclers[0];
+  const DEFAULT_RECYCLER = {
+    id: 'REC-001',
+    name: 'Reliance Industries Circular (R-Elan)',
+    facility: 'Dahej Polyester Fiber Complex, Gujarat',
+    cpcbReg: 'CPCB/EPR/2026/PL-08491',
+    categories: ['plastic_pet'],
+    rateMultiplier: 1.15,
+    contact: 'procurement@reliancerecycle.com',
+    status: 'ACTIVE'
+  };
+
+  const activeRecycler = (recyclers && recyclers.find(r => r.id === selectedRecyclerId)) || (recyclers && recyclers[0]) || DEFAULT_RECYCLER;
 
   const refreshData = () => {
     setCollections(platformStore.getCollections());
