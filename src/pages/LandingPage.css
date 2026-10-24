@@ -63,18 +63,37 @@
    ═══════════════════════════════════════════════════════════ */
 .top-nav {
   position: sticky;
-  top: 0;
+  top: 1.25rem;
   z-index: 100;
+  max-width: 1360px;
+  margin: 1.25rem auto 1.5rem auto;
+  padding: 1.1rem 2.75rem; /* Generous top, bottom, left and right padding */
   background: var(--bg-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 0.95rem 1.75rem;
-  transition: background-color 0.25s ease, border-color 0.25s ease;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--border-medium);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.45);
+  transition: all 0.25s ease;
+}
+
+@media (max-width: 1400px) {
+  .top-nav {
+    margin: 1rem 1.75rem 1.25rem 1.75rem;
+    padding: 1rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-nav {
+    margin: 0.5rem 0.75rem 1rem 0.75rem;
+    padding: 0.85rem 1.25rem;
+    border-radius: 16px;
+  }
 }
 
 .nav-container {
-  max-width: 1300px;
+  max-width: 100%;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -89,8 +108,8 @@
 }
 
 .brand-icon-box {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--accent-green), #059669);
   display: flex;
@@ -116,7 +135,7 @@
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 1.75rem;
+  gap: 1.25rem;
 }
 
 .nav-item-link {
@@ -125,10 +144,112 @@
   color: var(--text-secondary);
   transition: color 0.2s ease;
   text-decoration: none;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
 }
 
 .nav-item-link:hover {
   color: var(--accent-green);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+/* Consolidated Dropdown Menus */
+.nav-dropdown-wrapper {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.45rem 0.85rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.nav-dropdown-trigger:hover,
+.nav-dropdown-trigger.active {
+  color: var(--accent-green);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  min-width: 320px;
+  background: var(--bg-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-medium);
+  border-radius: 18px;
+  padding: 0.75rem;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 150;
+  animation: dropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.18s ease;
+}
+
+.nav-dropdown-item:hover {
+  background: var(--accent-green-subtle);
+  transform: translateX(3px);
+}
+
+.nav-dropdown-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.nav-dropdown-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  display: block;
+  color: var(--text-primary);
+}
+
+.nav-dropdown-desc {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  display: block;
+  line-height: 1.35;
+  margin-top: 0.15rem;
 }
 
 .nav-actions {
@@ -232,21 +353,59 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LIVE INTERACTIVE END-TO-END WORKFLOW SANDBOX (FEATURE 1)
+   UNIFIED LANDING SECTION LAYOUT & CENTERED TYPOGRAPHY
    ═══════════════════════════════════════════════════════════ */
-.workflow-sandbox-section {
+.solution-matrix-section,
+.five-loops-section,
+.aiml-modules-section,
+.workflow-section,
+.workflow-sandbox-section,
+.recycler-network-section,
+.hardware-free-section,
+.pilot-proof-section,
+.landing-section {
   padding: 5rem 1.75rem;
-  max-width: 1300px;
+  max-width: 1320px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Center-Aligned Section Header Typography */
+.section-headline-center {
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto 3rem auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+.section-h2 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  margin-top: 1rem;
+  margin-bottom: 0.85rem;
+  line-height: 1.25;
+}
+
+.section-p {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0 auto;
+  max-width: 740px;
 }
 
 .workflow-container {
   background: var(--bg-card);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-2xl);
-  padding: 2.5rem;
+  padding: 2.25rem;
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(20px);
 }
@@ -310,9 +469,9 @@
 /* Interactive Stage Display Grid */
 .workflow-stage-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
-  align-items: center;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 2.25rem;
+  align-items: stretch;
 }
 
 /* Optical Camera HUD Viewport */
@@ -657,17 +816,20 @@
 /* ═══════════════════════════════════════════════════════════
    FOOTER
    ═══════════════════════════════════════════════════════════ */
-.modern-footer {
+.modern-footer,
+.footer-section {
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-subtle);
   padding: 4.5rem 1.75rem 2.5rem;
   position: relative;
   z-index: 1;
+  width: 100%;
 }
 
 .footer-container {
-  max-width: 1300px;
+  max-width: 1320px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .footer-top {
@@ -788,11 +950,12 @@
 
 /* Problem Analysis Matrix (Slide 2) */
 .solution-matrix-section {
-  padding: 5.5rem 2rem;
+  padding: 5rem 1.75rem;
   max-width: 1320px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
 }
 
 .matrix-table-wrapper {
@@ -953,7 +1116,8 @@
   position: relative;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  height: 380px;
+  min-height: 440px;
+  height: 100%;
   background: #0A0E17;
   display: flex;
   align-items: center;
@@ -1016,6 +1180,30 @@
 
 @media (max-width: 860px) {
   .judge-qa-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VOLUNTEER & COLLECTOR ECOSYSTEM SECTION
+   ═══════════════════════════════════════════════════════════ */
+.ecosystem-section {
+  padding: 5.5rem 1.75rem;
+  max-width: 1320px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.ecosystem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 960px) {
+  .ecosystem-grid {
     grid-template-columns: 1fr;
   }
 }

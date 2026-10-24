@@ -10,14 +10,40 @@ import toast from 'react-hot-toast';
 import './DashboardLayout.css';
 
 const getNavItems = (role) => {
+  if (role === 'volunteer') {
+    return [
+      { path: '/dashboard/volunteer', icon: LayoutDashboard, label: 'Volunteer Console', end: true },
+      { path: '/dashboard/scanner', icon: Camera, label: 'AI Camera Scanner', highlight: true },
+      { path: '/dashboard/tracking', icon: MapPin, label: 'Verified Trace Ledger' },
+      { path: '/dashboard/machine', icon: Factory, label: 'EcoSynthesizer' }
+    ];
+  }
+  if (role === 'collector') {
+    return [
+      { path: '/dashboard/collector', icon: LayoutDashboard, label: 'Collector Worklist', end: true },
+      { path: '/dashboard/pickups', icon: Truck, label: 'Dynamic Pickup Route' },
+      { path: '/dashboard/scanner', icon: Camera, label: 'AI Tare Inspection', highlight: true },
+      { path: '/dashboard/tracking', icon: MapPin, label: 'Delivery Manifest' }
+    ];
+  }
+  if (role === 'recycler') {
+    return [
+      { path: '/dashboard/recycler', icon: LayoutDashboard, label: 'Recycler Intake Gate', end: true },
+      { path: '/dashboard/machine', icon: Factory, label: 'EcoSynthesizer Plant', highlight: true },
+      { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'B2B Scrap Lots' },
+      { path: '/dashboard/epr-credits', icon: Award, label: 'CPCB EPR Registry' }
+    ];
+  }
   return [
-    { path: `/dashboard/${role}`, icon: LayoutDashboard, label: 'Dashboard', end: true },
+    { path: '/dashboard/admin', icon: LayoutDashboard, label: 'Master Admin Console', end: true },
+    { path: '/dashboard/volunteer', icon: User, label: 'Volunteer View' },
+    { path: '/dashboard/collector', icon: Truck, label: 'Collector View' },
+    { path: '/dashboard/recycler', icon: Building2, label: 'Recycler Intake View' },
     { path: '/dashboard/scanner', icon: Camera, label: 'AI Scanner & Deposit', highlight: true },
-    { path: '/dashboard/machine', icon: Factory, label: 'EcoSynthesizer & Recyclers', highlight: true },
+    { path: '/dashboard/machine', icon: Factory, label: 'EcoSynthesizer & Recyclers' },
     { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'B2B Marketplace' },
     { path: '/dashboard/tracking', icon: MapPin, label: 'MRF & Logistics' },
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Impact Analytics' },
-    { path: '/dashboard/pickups', icon: Truck, label: 'Doorstep Pickups' },
     { path: '/dashboard/epr-credits', icon: Award, label: 'CPCB EPR Registry' },
   ];
 };
@@ -49,104 +75,127 @@ export default function DashboardLayout() {
 
   const handleQuickRoleSwitch = (newRole) => {
     const roleProfiles = {
-      admin: { name: 'Priya Sharma', role: 'admin', email: 'admin@ecoloop.in', avatar: 'PS' },
-      ngo: { name: 'Green Earth NGO', role: 'ngo', email: 'ngo@ecoloop.in', avatar: 'GE' },
-      volunteer: { name: 'Arjun Patel', role: 'volunteer', email: 'volunteer@ecoloop.in', avatar: 'AP' },
-      hostel: { name: 'IIT Delhi Hostel', role: 'hostel', email: 'hostel@ecoloop.in', avatar: 'ID' }
+      volunteer: { name: 'Ananya Deshmukh', role: 'volunteer', email: 'volunteer@ecoloop.in', avatar: 'AD' },
+      collector: { name: 'Ramesh Kumar', role: 'collector', email: 'collector@ecoloop.in', avatar: 'RK' },
+      recycler: { name: 'Reliance Circular Industries', role: 'recycler', email: 'recycler@ecoloop.in', avatar: 'RC', recyclerId: 'REC-001' },
+      admin: { name: 'Priya Sharma', role: 'admin', email: 'admin@ecoloop.in', avatar: 'PS' }
     };
-    login(roleProfiles[newRole]);
+    const targetUser = roleProfiles[newRole] || roleProfiles.admin;
+    login(targetUser);
     navigate(getDashboardPath(newRole));
     setRoleSwitchOpen(false);
-    toast.success(`Switched role to ${newRole.toUpperCase()} Console!`);
+    toast.success(`Switched to ${newRole.toUpperCase()} Console!`);
   };
 
   const roleLabels = {
-    admin: 'Platform Admin',
-    ngo: 'NGO Partner',
-    volunteer: 'Volunteer Agent',
-    hostel: 'Hostel Manager'
+    volunteer: 'Volunteer Donor',
+    collector: 'Field Collector',
+    recycler: 'Recycling Company',
+    admin: 'Platform Admin'
   };
 
   return (
     <div className={`dashboard-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}`}>
       
-      {/* Sidebar */}
+      {/* Mobile Drawer Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="sidebar-backdrop mobile-only"
+          onClick={() => setSidebarOpen(false)}
+          title="Close menu"
+        />
+      )}
+
+      {/* Sidebar - Always properly visible and styled */}
       <aside className="sidebar">
-        <div className="sidebar-header">
-          <NavLink to="/" className="sidebar-logo">
-            <div className="neo-circle-btn" style={{ width: '38px', height: '38px', background: 'var(--neo-green)', color: '#fff' }}>
-              <Recycle size={20} />
+        <div className="sidebar-header" style={{ padding: '1rem 1.25rem', justifyContent: 'space-between' }}>
+          <NavLink to="/" className="sidebar-logo" style={{ textDecoration: 'none' }}>
+            <div className="neo-circle-btn" style={{ width: '40px', height: '40px', background: 'var(--neo-green)', color: '#fff', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Recycle size={22} />
             </div>
-            {sidebarOpen && (
-              <span className="font-display" style={{ fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
-                Loop<span style={{ color: 'var(--neo-green-dark)' }}>IIT</span>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, marginLeft: '0.65rem' }}>
+              <span className="font-display" style={{ fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                Campus<span style={{ color: 'var(--neo-green-dark)' }}>Waste</span>
               </span>
-            )}
+              <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Smart Recovery System
+              </span>
+            </div>
           </NavLink>
-          <button className="neo-circle-btn sidebar-toggle" style={{ width: '34px', height: '34px' }} onClick={() => setSidebarOpen(!sidebarOpen)}>
-            {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
+          <button
+            className="neo-circle-btn sidebar-toggle mobile-only"
+            style={{ width: '32px', height: '32px', flexShrink: 0 }}
+            onClick={() => setSidebarOpen(false)}
+            title="Close sidebar"
+          >
+            <X size={15} />
           </button>
         </div>
 
         {/* Quick Launch Scanner Button */}
-        {sidebarOpen && (
-          <div style={{ padding: '0.875rem 0.875rem 0' }}>
-            <NavLink
-              to="/dashboard/scanner"
-              className="neo-btn neo-btn-primary"
-              style={{ width: '100%', fontSize: '0.875rem', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-            >
-              <Zap size={16} /> AI Camera Scanner
-            </NavLink>
-          </div>
-        )}
+        <div style={{ padding: '0.875rem 1rem 0' }}>
+          <NavLink
+            to="/dashboard/scanner"
+            className="neo-btn neo-btn-primary"
+            style={{ width: '100%', fontSize: '0.875rem', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Zap size={16} /> AI Camera Scanner
+          </NavLink>
+        </div>
 
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" style={{ padding: '1.25rem 1rem' }}>
           <div className="nav-section">
-            {sidebarOpen && <div className="nav-section-title">Operations Console</div>}
+            <div className="nav-section-title">Core Dashboards</div>
             {navItems.map(item => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 end={item.end}
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                style={item.highlight ? { borderLeft: '3px solid var(--neo-green-dark)' } : {}}
+                style={{
+                  ...(item.highlight ? { borderLeft: '3px solid var(--neo-green-dark)' } : {}),
+                  justifyContent: 'flex-start',
+                  padding: '0.7rem 1rem'
+                }}
+                title={item.label}
+                onClick={() => setSidebarOpen(false)}
               >
-                <item.icon size={19} />
-                {sidebarOpen && <span>{item.label}</span>}
+                <item.icon size={19} style={{ flexShrink: 0 }} />
+                <span style={{ fontWeight: 600 }}>{item.label}</span>
               </NavLink>
             ))}
           </div>
         </nav>
 
         {/* Sidebar Footer with Quick Role Switcher */}
-        <div className="sidebar-footer">
-          <div style={{ position: 'relative', marginBottom: '0.5rem' }}>
+        <div className="sidebar-footer" style={{ padding: '1rem' }}>
+          <div style={{ position: 'relative', marginBottom: '0.65rem' }}>
             <button
               className="neo-btn"
-              style={{ width: '100%', fontSize: '0.78rem', padding: '0.45rem', justifyContent: 'space-between' }}
+              style={{ width: '100%', fontSize: '0.8rem', padding: '0.55rem 0.85rem', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}
               onClick={() => setRoleSwitchOpen(!roleSwitchOpen)}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Shield size={14} color="var(--neo-green-dark)" />
-                {sidebarOpen ? `Role: ${roleLabels[user?.role] || user?.role}` : 'Role'}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Shield size={15} color="var(--neo-green-dark)" />
+                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{roleLabels[user?.role] || user?.role}</span>
               </span>
-              {sidebarOpen && <ChevronDown size={14} />}
+              <ChevronDown size={14} />
             </button>
 
             {roleSwitchOpen && (
-              <div className="neo-card-sm" style={{ position: 'absolute', bottom: '105%', left: 0, right: 0, zIndex: 100, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Switch Role Dashboard</div>
+              <div className="neo-card-sm" style={{ position: 'absolute', bottom: '110%', left: 0, right: 0, zIndex: 100, display: 'flex', flexDirection: 'column', gap: '0.35rem', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', width: '100%' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', padding: '0.2rem 0.4rem' }}>Switch Role Dashboard</div>
                 {[
-                  { role: 'admin', label: 'Admin Console' },
-                  { role: 'ngo', label: 'NGO Console' },
-                  { role: 'volunteer', label: 'Volunteer Console' },
-                  { role: 'hostel', label: 'Hostel Console' }
+                  { role: 'volunteer', label: '🌱 Volunteer Console' },
+                  { role: 'collector', label: '🚛 Collector Console' },
+                  { role: 'recycler', label: '🏭 Recycler Portal' },
+                  { role: 'admin', label: '🛡️ Admin Console' }
                 ].map(r => (
                   <button
                     key={r.role}
-                    className={`neo-btn ${user?.role === r.role ? 'active' : ''}`}
-                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.6rem', textAlign: 'left', justifyContent: 'flex-start' }}
+                    className={`neo-btn ${user?.role === r.role ? 'active neo-btn-primary' : ''}`}
+                    style={{ fontSize: '0.78rem', padding: '0.45rem 0.75rem', textAlign: 'left', justifyContent: 'flex-start' }}
                     onClick={() => handleQuickRoleSwitch(r.role)}
                   >
                     {r.label}
@@ -156,9 +205,14 @@ export default function DashboardLayout() {
             )}
           </div>
 
-          <button className="nav-item logout-btn" onClick={handleLogout}>
-            <LogOut size={18} />
-            {sidebarOpen && <span>Sign Out</span>}
+          <button
+            className="nav-item logout-btn"
+            onClick={handleLogout}
+            style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--accent-red)', padding: '0.65rem 1rem' }}
+            title="Sign Out"
+          >
+            <LogOut size={18} style={{ flexShrink: 0 }} />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -168,23 +222,98 @@ export default function DashboardLayout() {
         
         {/* Header */}
         <header className="dashboard-header">
-          <div className="header-left">
-            <button className="mobile-menu neo-circle-btn" style={{ width: '38px', height: '38px' }} onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <button className="neo-circle-btn mobile-menu" style={{ width: '38px', height: '38px' }} onClick={() => setSidebarOpen(true)} title="Open navigation drawer">
               <Menu size={18} />
             </button>
-            <div className="header-search neo-inset" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Search size={16} color="var(--text-muted)" />
-              <input
-                type="text"
-                placeholder="Search polymer, CPCB lot, pickup ID..."
-                style={{ width: '100%', fontSize: '0.85rem' }}
-              />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className="font-display" style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+                Campus<span style={{ color: 'var(--neo-green-dark)' }}>Waste</span>
+              </span>
+              <span className="neo-badge neo-badge-green" style={{ fontSize: '0.72rem', padding: '0.2rem 0.6rem' }}>
+                {roleLabels[user?.role] || user?.role}
+              </span>
             </div>
           </div>
 
-          <div className="header-right">
+          <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            {/* Unified Role Switcher Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setRoleSwitchOpen(!roleSwitchOpen)}
+                className="neo-btn"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.45rem 0.85rem',
+                  fontSize: '0.8125rem',
+                  fontWeight: 700
+                }}
+                title="Switch Dashboard Console"
+              >
+                <span>
+                  {user?.role === 'volunteer' && '🌱 Volunteer Console'}
+                  {user?.role === 'collector' && '🚛 Collector Worklist'}
+                  {user?.role === 'recycler' && '🏭 Recycler Gate'}
+                  {user?.role === 'admin' && '🛡️ Admin Console'}
+                </span>
+                <ChevronDown size={14} style={{ transform: roleSwitchOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+
+              {roleSwitchOpen && (
+                <div
+                  className="neo-card"
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    minWidth: '240px',
+                    padding: '0.5rem',
+                    zIndex: 100,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem',
+                    boxShadow: '0 12px 30px rgba(0,0,0,0.35)'
+                  }}
+                >
+                  <div style={{ fontSize: '0.6875rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', padding: '0.35rem 0.5rem' }}>
+                    Switch Active Console
+                  </div>
+                  <button
+                    onClick={() => handleQuickRoleSwitch('volunteer')}
+                    className={`neo-btn ${user?.role === 'volunteer' ? 'active neo-btn-primary' : ''}`}
+                    style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.8125rem' }}
+                  >
+                    🌱 Volunteer (Donor Portal)
+                  </button>
+                  <button
+                    onClick={() => handleQuickRoleSwitch('collector')}
+                    className={`neo-btn ${user?.role === 'collector' ? 'active neo-btn-primary' : ''}`}
+                    style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.8125rem' }}
+                  >
+                    🚛 Collector (Tare Scale &amp; Route)
+                  </button>
+                  <button
+                    onClick={() => handleQuickRoleSwitch('recycler')}
+                    className={`neo-btn ${user?.role === 'recycler' ? 'active neo-btn-primary' : ''}`}
+                    style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.8125rem' }}
+                  >
+                    🏭 Recycler (Intake Inspection)
+                  </button>
+                  <button
+                    onClick={() => handleQuickRoleSwitch('admin')}
+                    className={`neo-btn ${user?.role === 'admin' ? 'active neo-btn-primary' : ''}`}
+                    style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.8125rem' }}
+                  >
+                    🛡️ Admin (Audits &amp; Payouts)
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Quick Action: Open AI Scanner */}
-            <NavLink to="/dashboard/scanner" className="neo-btn neo-btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8125rem' }}>
+            <NavLink to="/dashboard/scanner" className="neo-btn" style={{ padding: '0.45rem 0.85rem', fontSize: '0.8125rem' }}>
               <Camera size={15} /> AI Scanner
             </NavLink>
 

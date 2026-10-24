@@ -5,7 +5,7 @@ import {
   RefreshCw, MapPin, Scale, ArrowRight, Download, Eye, Award,
   Leaf, IndianRupee, Layers, Check, Cpu, Trash2, Zap, SlidersHorizontal,
   Upload, HelpCircle, Sun, AlertCircle, ExternalLink, Factory, Image as ImageIcon,
-  CheckCircle, ArrowUpRight
+  CheckCircle, ArrowUpRight, Video, Square, Play, Circle, Radio
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import petBottleImg from '../assets/waste/pet_bottle.jpg';
@@ -161,19 +161,30 @@ export default function AIScanner() {
   const [completedSteps, setCompletedSteps] = useState([true, true, true, false]);
   const [lastTraceJson, setLastTraceJson] = useState(null);
   const [showJsonModal, setShowJsonModal] = useState(false);
+  const [showRawJsonView, setShowRawJsonView] = useState(false);
   const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
 
   // Real Frame & Upload Analysis State
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [capturedImage, setCapturedImage] = useState(null);
   const [dynamicBox, setDynamicBox] = useState(WASTE_DATABASE[0].box);
   const [dynamicConfidence, setDynamicConfidence] = useState(WASTE_DATABASE[0].confidence);
   const [ambientLightLevel, setAmbientLightLevel] = useState(78);
   const [focusSharpness, setFocusSharpness] = useState(86);
 
+  // Live Video Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [recordedVideoUrl, setRecordedVideoUrl] = useState(null);
+  const [shutterFlash, setShutterFlash] = useState(false);
+
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
 
   const currentItem = WASTE_DATABASE[selectedWasteIndex];
 
@@ -298,46 +309,385 @@ export default function AIScanner() {
   };
 
   // ═══════════════════════════════════════════════════════════
-  // CAMERA STREAM HANDLER
+  // CAMERA STREAM HANDLER WITH EXPLICIT PERMISSION & CLEANUP
+  // ═══════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
+  // CAMERA STREAM HANDLER WITH MULTI-LEVEL FALLBACK & ROBUST WEBRTC
   // ═══════════════════════════════════════════════════════════
   const startCamera = async () => {
     setCameraError(null);
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('WebRTC Camera API is not supported in this browser context or insecure HTTP.');
+        throw new Error('WebRTC getUserMedia() is not supported in this browser version. Please update Chrome, Safari, or Edge.');
       }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
+
+      let stream = null;
+      // 1. Try high-definition rear/environment camera first
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+      } catch (firstErr) {
+        console.warn('Initial camera constraints not satisfied on this hardware, falling back to basic video constraint:', firstErr);
+        // 2. Reliable fallback for laptops, integrated front cams, and USB webcams
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+
+      if (!stream) {
+        throw new Error('No video stream received from camera device.');
+      }
+
       streamRef.current = stream;
+      setCameraActive(true);
+      setCapturedImage(null);
+      setUploadedImage(null);
+      setRecordedVideoUrl(null);
+
+      // Direct assignment to video element if already mounted
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(e => console.warn('Camera video play error:', e));
       }
-      setCameraActive(true);
-      setUploadedImage(null);
-      toast.success('Live WebRTC optical feed active! Point lens at waste item.');
+
+      toast.success('Live camera stream active! Point lens at waste item to scan or record.');
+      return stream;
     } catch (err) {
       console.warn('Camera stream error:', err);
-      const msg = err.name === 'NotAllowedError'
-        ? 'Camera permission denied. Please allow camera access in browser address bar.'
-        : err.message || 'Camera hardware unavailable.';
-      setCameraError(msg);
+      let userMsg = 'Camera hardware unavailable.';
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        userMsg = 'Camera permission denied. Click the camera/padlock icon in your browser URL bar to allow camera access.';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        userMsg = 'No camera device found on this system. You can snap sample stream photos or upload images.';
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        userMsg = 'Camera is currently locked or in use by another application. Please close other camera apps and retry.';
+      } else if (err.message) {
+        userMsg = err.message;
+      }
+      setCameraError(userMsg);
       setCameraActive(false);
-      toast.error(msg, { duration: 5000 });
-      setShowDiagnosticsModal(true);
+      toast.error(userMsg, { duration: 6000 });
+      return null;
     }
   };
 
   const stopCamera = () => {
+    if (isRecording) {
+      stopRecording();
+    }
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach(track => {
+        try { track.stop(); } catch (e) {}
+      });
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setCameraActive(false);
+    toast('Camera turned off', { icon: '📷' });
   };
 
+  // Capture current live frame or stream snapshot into capturedImage and run optical classification
+  const captureImage = async () => {
+    // Visual shutter flash
+    setShutterFlash(true);
+    setTimeout(() => setShutterFlash(false), 220);
+
+    // Case A: Live Webcam is active
+    if (cameraActive && videoRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current || document.createElement('canvas');
+      const w = video.videoWidth > 0 ? video.videoWidth : 640;
+      const h = video.videoHeight > 0 ? video.videoHeight : 480;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      setCapturedImage(dataUrl);
+
+      // Trigger AI optical analysis on the captured snapshot
+      setIsScanning(true);
+      setScanComplete(false);
+      toast.success('Live photo captured! Analyzing optical features with YOLOE-26...');
+
+      setTimeout(() => {
+        const res = analyzeFramePixels(canvas, ctx);
+        if (res) {
+          setSelectedWasteIndex(res.matchedIndex);
+          setDynamicBox(res.box);
+          setDynamicConfidence(res.confidence);
+          setInferenceTime(res.inferenceTimeMs);
+          const matched = WASTE_DATABASE[res.matchedIndex];
+          toast.success(`Captured & Classified: ${matched.name} (${(res.confidence * 100).toFixed(1)}%) in ${res.inferenceTimeMs}ms!`);
+        } else {
+          setDynamicBox(currentItem.box);
+          setDynamicConfidence(currentItem.confidence);
+          toast.success(`Captured image classified as ${currentItem.name}!`);
+        }
+        setIsScanning(false);
+        setScanComplete(true);
+      }, 350);
+      return;
+    }
+
+    // Case B: Camera is NOT currently active -> attempt to start camera
+    toast('Opening camera for live snapshot...', { icon: '📷' });
+    try {
+      const stream = await startCamera();
+      if (stream) {
+        // Wait for video element to initialize dimensions
+        await new Promise(r => setTimeout(r, 450));
+        if (videoRef.current) {
+          const video = videoRef.current;
+          const canvas = canvasRef.current || document.createElement('canvas');
+          const w = video.videoWidth > 0 ? video.videoWidth : 640;
+          const h = video.videoHeight > 0 ? video.videoHeight : 480;
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          setCapturedImage(dataUrl);
+
+          setIsScanning(true);
+          setScanComplete(false);
+          setTimeout(() => {
+            const res = analyzeFramePixels(canvas, ctx);
+            if (res) {
+              setSelectedWasteIndex(res.matchedIndex);
+              setDynamicBox(res.box);
+              setDynamicConfidence(res.confidence);
+              setInferenceTime(res.inferenceTimeMs);
+            }
+            setIsScanning(false);
+            setScanComplete(true);
+            toast.success(`Photo captured from webcam and classified!`);
+          }, 350);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Webcam start failed during capture:', e);
+    }
+
+    // Case C: Fallback when webcam is unavailable or permission not yet given:
+    // Capture snapshot of currently inspected waste stream demo item
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = currentItem.sampleImg;
+    img.onload = () => {
+      const canvas = canvasRef.current || document.createElement('canvas');
+      canvas.width = img.naturalWidth || 640;
+      canvas.height = img.naturalHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      setCapturedImage(dataUrl);
+
+      setIsScanning(true);
+      setScanComplete(false);
+      toast.success(`Snapshot captured from waste stream! Analyzing ${currentItem.name}...`);
+
+      setTimeout(() => {
+        const res = analyzeFramePixels(canvas, ctx);
+        if (res) {
+          setSelectedWasteIndex(res.matchedIndex);
+          setDynamicBox(res.box);
+          setDynamicConfidence(res.confidence);
+          setInferenceTime(res.inferenceTimeMs);
+        } else {
+          setDynamicBox(currentItem.box);
+          setDynamicConfidence(currentItem.confidence);
+        }
+        setIsScanning(false);
+        setScanComplete(true);
+        toast.success(`Classified: ${currentItem.name} (${(currentItem.confidence * 100).toFixed(1)}%)!`);
+      }, 350);
+    };
+    img.onerror = () => {
+      setCapturedImage(currentItem.sampleImg);
+      triggerScan();
+      toast.success(`Snapshot captured of ${currentItem.name}!`);
+    };
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // LIVE VIDEO RECORDING (MediaRecorder) HANDLER WITH RESILIENT FALLBACK
+  // ═══════════════════════════════════════════════════════════
+  const startRecording = async () => {
+    let stream = streamRef.current;
+    
+    // If camera is not active yet, try turning it on
+    if (!cameraActive || !stream) {
+      toast('Starting camera for video recording...', { icon: '📹' });
+      try {
+        stream = await startCamera();
+        if (stream) {
+          await new Promise(r => setTimeout(r, 450));
+        }
+      } catch (err) {
+        console.warn('Webcam start failed for recording:', err);
+      }
+    }
+
+    // If we have a live webcam stream
+    if (stream) {
+      try {
+        recordedChunksRef.current = [];
+        let recorder = null;
+        const types = ['video/webm;codecs=vp8', 'video/webm;codecs=vp9', 'video/webm', 'video/mp4'];
+        for (const type of types) {
+          if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type)) {
+            try {
+              recorder = new MediaRecorder(stream, { mimeType: type });
+              break;
+            } catch (e) {}
+          }
+        }
+        if (!recorder && typeof MediaRecorder !== 'undefined') {
+          try {
+            recorder = new MediaRecorder(stream);
+          } catch (e) {}
+        }
+
+        if (recorder) {
+          recorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              recordedChunksRef.current.push(event.data);
+            }
+          };
+
+          recorder.onstop = () => {
+            if (recordedChunksRef.current.length > 0) {
+              const blob = new Blob(recordedChunksRef.current, { type: recorder.mimeType || 'video/webm' });
+              const videoUrl = URL.createObjectURL(blob);
+              setRecordedVideoUrl(videoUrl);
+              setCapturedImage(null);
+
+              // Extract frame from video element onto canvas to run classification
+              if (videoRef.current) {
+                const video = videoRef.current;
+                const canvas = canvasRef.current || document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const res = analyzeFramePixels(canvas, ctx);
+                if (res) {
+                  setSelectedWasteIndex(res.matchedIndex);
+                  setDynamicBox(res.box);
+                  setDynamicConfidence(res.confidence);
+                  setInferenceTime(res.inferenceTimeMs);
+                  const matched = WASTE_DATABASE[res.matchedIndex];
+                  toast.success(`Recorded Video Processed! Classified: ${matched.name} (${(res.confidence * 100).toFixed(1)}%)!`);
+                }
+              }
+            }
+          };
+
+          recorder.start(250);
+          mediaRecorderRef.current = recorder;
+          setIsRecording(true);
+          setRecordingSeconds(0);
+
+          if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = setInterval(() => {
+            setRecordingSeconds(prev => prev + 1);
+          }, 1000);
+
+          toast.success('🔴 Live video recording started! Move waste item across the camera.');
+          return;
+        }
+      } catch (err) {
+        console.warn('Real MediaRecorder failed, using live stream recording simulation:', err);
+      }
+    }
+
+    // Fallback: If camera hardware is not available, run video recording simulation of stream
+    setIsRecording(true);
+    setRecordingSeconds(0);
+    recordedChunksRef.current = [];
+
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds(prev => prev + 1);
+    }, 1000);
+
+    toast.success('🔴 Recording waste stream video... Tap "Stop Recording" when ready.');
+  };
+
+  const stopRecording = () => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {}
+    } else {
+      // In stream recording fallback, capture snapshot and analyze
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = currentItem.sampleImg;
+      img.onload = () => {
+        const canvas = canvasRef.current || document.createElement('canvas');
+        canvas.width = img.naturalWidth || 640;
+        canvas.height = img.naturalHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        setCapturedImage(dataUrl);
+        const res = analyzeFramePixels(canvas, ctx);
+        if (res) {
+          setSelectedWasteIndex(res.matchedIndex);
+          setDynamicBox(res.box);
+          setDynamicConfidence(res.confidence);
+          setInferenceTime(res.inferenceTimeMs);
+        }
+        triggerScan();
+      };
+    }
+
+    setIsRecording(false);
+    toast.success('Recording saved! Processed with YOLOE-26 Edge AI.');
+  };
+
+  // Discard captured snapshot or recorded clip and resume live video
+  const retakeImage = () => {
+    setCapturedImage(null);
+    setRecordedVideoUrl(null);
+    if (!cameraActive) {
+      startCamera();
+    }
+  };
+
+  // Attach stream whenever cameraActive changes
   useEffect(() => {
-    return () => stopCamera();
+    if (cameraActive && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(e => console.warn('Stream play error:', e));
+    }
+  }, [cameraActive]);
+
+  // Clean unmount: Stop tracks and recording timer
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
   }, []);
 
   // ═══════════════════════════════════════════════════════════
@@ -660,288 +1010,683 @@ export default function AIScanner() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════
-          MODULE 2 & 3: AI CAMERA VIEWFINDER & TACTILE GUIDANCE
+          MODULE 2 & 3: AI CAMERA VIEWFINDER & TACTILE GUIDANCE (BALANCED 50/50)
           ═══════════════════════════════════════════════════════════ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.25fr) minmax(320px, 1fr)', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.75rem', alignItems: 'start' }}>
         
-        {/* Left Column: AI Camera Viewfinder (Inset Container) */}
-        <div className="neo-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div className="neo-circle-btn" style={{ width: '38px', height: '38px' }}>
-                <Camera size={18} />
-              </div>
-              <div>
-                <h2 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 700 }}>
-                  Live Optical Viewfinder
-                </h2>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                  {cameraActive ? 'Streaming hardware camera' : uploadedImage ? 'Analyzing uploaded photo' : 'Synthetic reference stream'}
+        {/* Left Column: AI Camera Viewfinder & Circular Transformation */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          
+          {/* Card 1: Live Optical Viewfinder */}
+          <div className="neo-card" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div className="neo-circle-btn" style={{ width: '38px', height: '38px' }}>
+                  <Camera size={18} />
                 </div>
+                <div>
+                  <h2 className="font-display" style={{ fontSize: '1.15rem', fontWeight: 700 }}>
+                    Live Optical Viewfinder
+                  </h2>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                    {capturedImage
+                      ? 'Inspecting captured webcam snapshot'
+                      : cameraActive
+                      ? 'Live WebRTC camera streaming'
+                      : uploadedImage
+                      ? 'Analyzing uploaded photo'
+                      : 'Synthetic reference waste stream'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Control Badges */}
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                {cameraActive ? (
+                  <>
+                    <button
+                      className="neo-btn neo-btn-primary"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 1rem', background: 'var(--accent-green)', color: '#0A0E17', fontWeight: 800 }}
+                      onClick={captureImage}
+                      id="btn-capture-image"
+                      title="Take snapshot photo from live webcam stream"
+                    >
+                      <Camera size={14} /> Snap Image
+                    </button>
+
+                    {!isRecording ? (
+                      <button
+                        className="neo-btn"
+                        style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem', background: 'rgba(239, 68, 68, 0.12)', color: '#EF4444', borderColor: '#EF4444', fontWeight: 700 }}
+                        onClick={startRecording}
+                        id="btn-start-recording"
+                        title="Start live video recording"
+                      >
+                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', marginRight: '6px' }}></span>
+                        Record Video
+                      </button>
+                    ) : (
+                      <button
+                        className="neo-btn"
+                        style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem', background: '#EF4444', color: '#FFFFFF', fontWeight: 800, animation: 'pulse 1s infinite' }}
+                        onClick={stopRecording}
+                        id="btn-stop-recording"
+                      >
+                        ⏹️ Stop Recording (00:0{recordingSeconds})
+                      </button>
+                    )}
+
+                    <button
+                      className="neo-btn"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', color: 'var(--accent-red)' }}
+                      onClick={stopCamera}
+                      id="btn-stop-camera"
+                    >
+                      Turn Off
+                    </button>
+                  </>
+                ) : isRecording ? (
+                  <button
+                    className="neo-btn"
+                    style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem', background: '#EF4444', color: '#FFFFFF', fontWeight: 800, animation: 'pulse 1s infinite' }}
+                    onClick={stopRecording}
+                    id="btn-stop-recording-stream"
+                  >
+                    ⏹️ Stop Recording (00:0{recordingSeconds})
+                  </button>
+                ) : capturedImage ? (
+                  <>
+                    <button
+                      className="neo-btn neo-btn-primary"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 1rem' }}
+                      onClick={retakeImage}
+                    >
+                      <RefreshCw size={14} /> Retake / Live
+                    </button>
+                    <button
+                      className="neo-btn"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+                      onClick={() => setCapturedImage(null)}
+                    >
+                      Reset
+                    </button>
+                  </>
+                ) : recordedVideoUrl ? (
+                  <>
+                    <button
+                      className="neo-btn neo-btn-primary"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 1rem' }}
+                      onClick={() => {
+                        setRecordedVideoUrl(null);
+                        startCamera();
+                      }}
+                    >
+                      <Camera size={14} /> Record Again / Live
+                    </button>
+                    <button
+                      className="neo-btn"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+                      onClick={() => setRecordedVideoUrl(null)}
+                    >
+                      Reset
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="neo-btn neo-btn-primary"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 1rem', background: 'var(--neo-green)', color: '#0A0E17', fontWeight: 800 }}
+                      onClick={startCamera}
+                      id="btn-start-camera"
+                    >
+                      <Camera size={14} /> Start Camera
+                    </button>
+                    <button
+                      className="neo-btn"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', fontWeight: 700 }}
+                      onClick={captureImage}
+                      id="btn-capture-sample"
+                      title="Snap photo and run AI classification"
+                    >
+                      📸 Snap Image
+                    </button>
+                    <button
+                      className="neo-btn"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.4)' }}
+                      onClick={startRecording}
+                      id="btn-record-sample"
+                      title="Start live video stream recording"
+                    >
+                      ⏺️ Record Video
+                    </button>
+                    <button
+                      className="neo-btn"
+                      style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload size={13} /> Upload
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                className={`neo-btn ${cameraActive ? 'neo-btn-primary' : ''}`}
-                style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem' }}
-                onClick={cameraActive ? stopCamera : startCamera}
-              >
-                {cameraActive ? 'Stop Camera' : 'Enable Webcam'}
-              </button>
-              <button
-                className="neo-btn"
-                style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem' }}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload size={13} /> Upload File
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Item Category Switcher */}
-          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
-            {WASTE_DATABASE.map((item, idx) => (
-              <button
-                key={item.id}
-                className={`neo-btn ${selectedWasteIndex === idx ? 'active' : ''}`}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '0.35rem 0.75rem',
-                  whiteSpace: 'nowrap',
-                  fontWeight: selectedWasteIndex === idx ? 700 : 500,
-                  color: selectedWasteIndex === idx ? 'var(--neo-green-dark)' : 'var(--text-secondary)'
-                }}
-                onClick={() => {
-                  setSelectedWasteIndex(idx);
-                  setUploadedImage(null);
-                  setDynamicBox(item.box);
-                  setDynamicConfidence(item.confidence);
-                  triggerScan();
-                }}
-              >
-                {item.code} {item.name.split(' ')[0]}
-              </button>
-            ))}
-          </div>
-
-          {/* Inset Camera Viewfinder */}
-          <div
-            className="neo-inset-lg"
-            style={{
-              position: 'relative',
-              borderRadius: 'var(--radius-lg)',
-              overflow: 'hidden',
-              minHeight: '380px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#0B1118'
-            }}
-          >
-            {/* Viewfinder Media Source: Uploaded Photo OR Live Video Feed OR Reference Image */}
-            {uploadedImage ? (
-              <img
-                src={uploadedImage}
-                alt="Uploaded waste item"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  position: 'absolute',
-                  inset: 0,
-                  filter: isScanning ? 'brightness(0.7) contrast(1.2)' : 'none'
-                }}
-              />
-            ) : cameraActive ? (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
-              />
-            ) : (
-              <img
-                src={currentItem.sampleImg}
-                alt={currentItem.name}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  position: 'absolute',
-                  inset: 0,
-                  filter: isScanning ? 'brightness(0.7) contrast(1.2)' : 'none',
-                  transition: 'all 0.3s ease'
-                }}
-              />
-            )}
-
-            {/* Clear upload badge */}
-            {uploadedImage && (
-              <button
-                onClick={() => setUploadedImage(null)}
-                style={{
-                  position: 'absolute',
-                  top: '12px',
-                  right: '12px',
-                  background: 'rgba(0,0,0,0.75)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '6px',
-                  padding: '4px 8px',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  zIndex: 20
-                }}
-              >
-                ✕ Reset to Sample
-              </button>
-            )}
-
-            {/* Neural Net Scanning Grid & Laser Reticle */}
-            {isScanning && (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'linear-gradient(rgba(46, 204, 113, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(46, 204, 113, 0.15) 1px, transparent 1px)',
-                  backgroundSize: '24px 24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 10
-                }}
-              >
-                <div style={{
-                  position: 'absolute',
-                  left: 0,
-                  right: 0,
-                  height: '3px',
-                  background: 'linear-gradient(90deg, transparent, var(--neo-green), transparent)',
-                  boxShadow: '0 0 15px var(--neo-green)',
-                  animation: 'shimmer 1.5s infinite linear'
-                }}></div>
-                <div style={{
-                  padding: '0.75rem 1.25rem',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(0,0,0,0.85)',
-                  border: '1px solid var(--neo-green)',
-                  color: 'var(--neo-green)',
-                  fontWeight: 700,
-                  fontSize: '0.875rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  <RefreshCw size={16} className="rotate-icon" style={{ animation: 'spin 1s linear infinite' }} />
-                  Extracting Optical Features &amp; YOLOE-26 Tensor...
+            {/* Camera Error Alert Banner */}
+            {cameraError && (
+              <div style={{ padding: '0.75rem 1rem', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '10px', marginBottom: '0.75rem', fontSize: '0.8125rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <AlertCircle size={16} color="var(--accent-red)" />
+                  <span>{cameraError}</span>
                 </div>
+                <button
+                  onClick={() => setShowDiagnosticsModal(true)}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent-orange)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                >
+                  View Camera Diagnostics
+                </button>
               </div>
             )}
 
-            {/* Dynamic AI Instance Segmentation Bounding Box */}
-            {scanComplete && !isScanning && (
-              <div
-                style={{
-                  position: 'absolute',
-                  left: `${dynamicBox.x}%`,
-                  top: `${dynamicBox.y}%`,
-                  width: `${dynamicBox.w}%`,
-                  height: `${dynamicBox.h}%`,
-                  border: `2px solid ${currentItem.color}`,
-                  borderRadius: '12px',
-                  boxShadow: `0 0 20px ${currentItem.color}80, inset 0 0 15px ${currentItem.color}30`,
-                  pointerEvents: 'none',
-                  zIndex: 5,
-                  transition: 'all 0.4s ease'
-                }}
-              >
-                {/* Floating Polymer Tag */}
+            {/* Quick Item Category Switcher */}
+            <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
+              {WASTE_DATABASE.map((item, idx) => (
+                <button
+                  key={item.id}
+                  className={`neo-btn ${selectedWasteIndex === idx ? 'active' : ''}`}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '0.35rem 0.75rem',
+                    whiteSpace: 'nowrap',
+                    fontWeight: selectedWasteIndex === idx ? 700 : 500,
+                    color: selectedWasteIndex === idx ? 'var(--neo-green-dark)' : 'var(--text-secondary)'
+                  }}
+                  onClick={() => {
+                    setSelectedWasteIndex(idx);
+                    setUploadedImage(null);
+                    setCapturedImage(null);
+                    setRecordedVideoUrl(null);
+                    setDynamicBox(item.box);
+                    setDynamicConfidence(item.confidence);
+                    triggerScan();
+                  }}
+                >
+                  {item.code} {item.name.split(' ')[0]}
+                </button>
+              ))}
+            </div>
+
+            {/* Inset Camera Viewfinder */}
+            <div
+              className="neo-inset-lg"
+              style={{
+                position: 'relative',
+                borderRadius: 'var(--radius-lg)',
+                overflow: 'hidden',
+                minHeight: '380px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#0B1118',
+                border: isRecording ? '2px solid #EF4444' : undefined,
+                boxShadow: isRecording ? '0 0 20px rgba(239, 68, 68, 0.4)' : undefined
+              }}
+            >
+              {/* Shutter flash effect */}
+              {shutterFlash && (
                 <div
                   style={{
                     position: 'absolute',
-                    top: '-32px',
-                    left: '0',
-                    background: currentItem.color,
-                    color: '#FFFFFF',
-                    padding: '3px 10px',
-                    borderRadius: '6px',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.04em',
+                    inset: 0,
+                    background: '#FFFFFF',
+                    opacity: 0.85,
+                    zIndex: 40,
+                    pointerEvents: 'none',
+                    transition: 'opacity 0.22s ease'
+                  }}
+                />
+              )}
+
+              {/* Viewfinder Media Source: Recorded Video OR Captured Photo OR Uploaded Photo OR Live Video Feed OR Reference Image */}
+              {recordedVideoUrl ? (
+                <video
+                  src={recordedVideoUrl}
+                  controls
+                  autoPlay
+                  loop
+                  playsInline
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    position: 'absolute',
+                    inset: 0
+                  }}
+                />
+              ) : capturedImage ? (
+                <img
+                  src={capturedImage}
+                  alt="Captured webcam waste item"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    position: 'absolute',
+                    inset: 0,
+                    filter: isScanning ? 'brightness(0.7) contrast(1.2)' : 'none'
+                  }}
+                />
+              ) : uploadedImage ? (
+                <img
+                  src={uploadedImage}
+                  alt="Uploaded waste item"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    position: 'absolute',
+                    inset: 0,
+                    filter: isScanning ? 'brightness(0.7) contrast(1.2)' : 'none'
+                  }}
+                />
+              ) : cameraActive ? (
+                <video
+                  ref={(el) => {
+                    videoRef.current = el;
+                    if (el && streamRef.current && el.srcObject !== streamRef.current) {
+                      el.srcObject = streamRef.current;
+                      el.play().catch(e => console.warn('Video playback error:', e));
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
+                />
+              ) : (
+                <img
+                  src={currentItem.sampleImg}
+                  alt={currentItem.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    position: 'absolute',
+                    inset: 0,
+                    filter: isScanning ? 'brightness(0.7) contrast(1.2)' : 'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                />
+              )}
+
+              {/* Live Status Indicators (Top-Left) */}
+              {cameraActive && !isRecording && (
+                <div style={{
+                  position: 'absolute',
+                  top: '12px',
+                  left: '12px',
+                  background: 'rgba(0,0,0,0.8)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(46, 204, 113, 0.6)',
+                  color: 'var(--neo-green)',
+                  padding: '4px 10px',
+                  borderRadius: '20px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  zIndex: 20
+                }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--neo-green)', boxShadow: '0 0 8px var(--neo-green)' }}></span>
+                  LIVE WEBCAM • 30 FPS
+                </div>
+              )}
+
+              {isRecording && (
+                <div style={{
+                  position: 'absolute',
+                  top: '12px',
+                  left: '12px',
+                  background: 'rgba(239, 68, 68, 0.95)',
+                  color: '#FFFFFF',
+                  padding: '5px 12px',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  zIndex: 25,
+                  boxShadow: '0 0 15px rgba(239, 68, 68, 0.7)'
+                }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFFFFF' }}></span>
+                  REC 00:{recordingSeconds < 10 ? `0${recordingSeconds}` : recordingSeconds} • RECORDING
+                </div>
+              )}
+
+              {recordedVideoUrl && (
+                <div style={{
+                  position: 'absolute',
+                  top: '12px',
+                  left: '12px',
+                  background: 'rgba(0,0,0,0.85)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(59, 130, 246, 0.6)',
+                  color: '#60A5FA',
+                  padding: '4px 10px',
+                  borderRadius: '20px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  zIndex: 20
+                }}>
+                  <Video size={13} />
+                  RECORDED VIDEO PLAYBACK
+                </div>
+              )}
+
+              {!cameraActive && !capturedImage && !uploadedImage && !recordedVideoUrl && (
+                <>
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    left: '12px',
+                    background: 'rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(245, 158, 11, 0.6)',
+                    color: '#F59E0B',
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
-                    whiteSpace: 'nowrap'
+                    zIndex: 20
+                  }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }}></span>
+                    Sample Stream (Webcam is OFF)
+                  </div>
+
+                  {/* Prominent center callout button to connect webcam */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 20,
+                    display: 'flex',
+                    gap: '0.5rem',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center'
+                  }}>
+                    <button
+                      className="neo-btn neo-btn-primary"
+                      style={{
+                        background: 'var(--neo-green)',
+                        color: '#0A0E17',
+                        fontWeight: 800,
+                        boxShadow: '0 4px 15px rgba(46, 204, 113, 0.4)',
+                        padding: '0.6rem 1.25rem',
+                        fontSize: '0.875rem'
+                      }}
+                      onClick={startCamera}
+                    >
+                      <Camera size={16} /> Turn On Real Camera (वेबकैम चालू करें)
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Clear captured/uploaded/recorded badge */}
+              {(capturedImage || uploadedImage || recordedVideoUrl) && (
+                <button
+                  onClick={() => {
+                    setCapturedImage(null);
+                    setUploadedImage(null);
+                    setRecordedVideoUrl(null);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    background: 'rgba(0,0,0,0.75)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '6px',
+                    padding: '4px 8px',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    zIndex: 25
                   }}
                 >
-                  <Cpu size={12} />
-                  {currentItem.code} • {(dynamicConfidence * 100).toFixed(1)}%
+                  ✕ Reset to Sample
+                </button>
+              )}
+
+              {/* Neural Net Scanning Grid & Laser Reticle */}
+              {isScanning && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(rgba(46, 204, 113, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(46, 204, 113, 0.15) 1px, transparent 1px)',
+                    backgroundSize: '24px 24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    height: '3px',
+                    background: 'linear-gradient(90deg, transparent, var(--neo-green), transparent)',
+                    boxShadow: '0 0 15px var(--neo-green)',
+                    animation: 'shimmer 1.5s infinite linear'
+                  }}></div>
+                  <div style={{
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: 'var(--radius-full)',
+                    background: 'rgba(0,0,0,0.85)',
+                    border: '1px solid var(--neo-green)',
+                    color: 'var(--neo-green)',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <RefreshCw size={16} className="rotate-icon" style={{ animation: 'spin 1s linear infinite' }} />
+                    Extracting Optical Features &amp; YOLOE-26 Tensor...
+                  </div>
                 </div>
+              )}
 
-                {/* Reticle Corners */}
-                <div style={{ position: 'absolute', top: -4, left: -4, width: 12, height: 12, borderTop: `3px solid ${currentItem.color}`, borderLeft: `3px solid ${currentItem.color}` }}></div>
-                <div style={{ position: 'absolute', top: -4, right: -4, width: 12, height: 12, borderTop: `3px solid ${currentItem.color}`, borderRight: `3px solid ${currentItem.color}` }}></div>
-                <div style={{ position: 'absolute', bottom: -4, left: -4, width: 12, height: 12, borderBottom: `3px solid ${currentItem.color}`, borderLeft: `3px solid ${currentItem.color}` }}></div>
-                <div style={{ position: 'absolute', bottom: -4, right: -4, width: 12, height: 12, borderBottom: `3px solid ${currentItem.color}`, borderRight: `3px solid ${currentItem.color}` }}></div>
-              </div>
-            )}
+              {/* Dynamic AI Instance Segmentation Bounding Box */}
+              {scanComplete && !isScanning && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${dynamicBox.x}%`,
+                    top: `${dynamicBox.y}%`,
+                    width: `${dynamicBox.w}%`,
+                    height: `${dynamicBox.h}%`,
+                    border: `2px solid ${currentItem.color}`,
+                    borderRadius: '12px',
+                    boxShadow: `0 0 20px ${currentItem.color}80, inset 0 0 15px ${currentItem.color}30`,
+                    pointerEvents: 'none',
+                    zIndex: 5,
+                    transition: 'all 0.4s ease'
+                  }}
+                >
+                  {/* Floating Polymer Tag */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-32px',
+                      left: '0',
+                      background: currentItem.color,
+                      color: '#FFFFFF',
+                      padding: '3px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.04em',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <Cpu size={12} />
+                    {currentItem.code} • {(dynamicConfidence * 100).toFixed(1)}%
+                  </div>
 
-            {/* Bottom HUD Overlay */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '12px',
-                left: '12px',
-                right: '12px',
-                background: 'rgba(10, 15, 24, 0.85)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 'var(--radius-md)',
-                padding: '0.625rem 1rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                color: '#FFFFFF',
-                fontSize: '0.75rem',
-                border: '1px solid rgba(255,255,255,0.1)',
-                zIndex: 6
-              }}
-            >
-              <div>
-                <span style={{ color: '#9CA3AF' }}>PWVO Stream: </span>
-                <strong style={{ color: currentItem.color }}>{currentItem.polymer}</strong>
+                  {/* Reticle Corners */}
+                  <div style={{ position: 'absolute', top: -4, left: -4, width: 12, height: 12, borderTop: `3px solid ${currentItem.color}`, borderLeft: `3px solid ${currentItem.color}` }}></div>
+                  <div style={{ position: 'absolute', top: -4, right: -4, width: 12, height: 12, borderTop: `3px solid ${currentItem.color}`, borderRight: `3px solid ${currentItem.color}` }}></div>
+                  <div style={{ position: 'absolute', bottom: -4, left: -4, width: 12, height: 12, borderBottom: `3px solid ${currentItem.color}`, borderLeft: `3px solid ${currentItem.color}` }}></div>
+                  <div style={{ position: 'absolute', bottom: -4, right: -4, width: 12, height: 12, borderBottom: `3px solid ${currentItem.color}`, borderRight: `3px solid ${currentItem.color}` }}></div>
+                </div>
+              )}
+
+              {/* Bottom HUD Overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '12px',
+                  left: '12px',
+                  right: '12px',
+                  background: 'rgba(10, 15, 24, 0.85)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.625rem 1rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  color: '#FFFFFF',
+                  fontSize: '0.75rem',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  zIndex: 6
+                }}
+              >
+                <div>
+                  <span style={{ color: '#9CA3AF' }}>PWVO Stream: </span>
+                  <strong style={{ color: currentItem.color }}>{currentItem.polymer}</strong>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <span>Light: <strong>{ambientLightLevel}%</strong></span>
+                  <span>Focus: <strong>{focusSharpness}%</strong></span>
+                  <span>Latency: <strong>{inferenceTime} ms</strong></span>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                <span>Light: <strong>{ambientLightLevel}%</strong></span>
-                <span>Focus: <strong>{focusSharpness}%</strong></span>
-                <span>Latency: <strong>{inferenceTime} ms</strong></span>
+            </div>
+
+            {/* Action Row */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+              <button
+                className="neo-btn neo-btn-primary"
+                style={{ flex: 1 }}
+                onClick={triggerScan}
+                disabled={isScanning}
+              >
+                <RefreshCw size={16} /> Re-Analyze Optical Frame
+              </button>
+              <button
+                className="neo-btn"
+                style={{ fontSize: '0.8125rem' }}
+                onClick={() => setShowDiagnosticsModal(true)}
+              >
+                <HelpCircle size={15} /> Troubleshooting Guide
+              </button>
+            </div>
+
+            {/* AI Optical & Neural Telemetry Breakdown (Eliminates white space, balances UI) */}
+            <div className="neo-inset" style={{ marginTop: '1.25rem', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Cpu size={14} color="var(--neo-green-dark)" /> Edge Vision Neural Telemetry
+                </span>
+                <span className="neo-badge neo-badge-green" style={{ fontSize: '0.6875rem' }}>
+                  WASM v4.2 Active
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                <div className="neo-card-sm" style={{ padding: '0.6rem 0.75rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Tensor Confidence</span>
+                  <strong style={{ fontSize: '1.05rem', color: 'var(--neo-green-dark)' }}>
+                    {(dynamicConfidence * 100).toFixed(1)}% Match
+                  </strong>
+                </div>
+                <div className="neo-card-sm" style={{ padding: '0.6rem 0.75rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Inference Latency</span>
+                  <strong style={{ fontSize: '1.05rem', color: 'var(--neo-blue)' }}>
+                    {inferenceTime} ms (Edge)
+                  </strong>
+                </div>
+                <div className="neo-card-sm" style={{ padding: '0.6rem 0.75rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Target Bin Slot</span>
+                  <strong style={{ fontSize: '0.85rem', color: currentItem.color, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentItem.code} High-Purity
+                  </strong>
+                </div>
+                <div className="neo-card-sm" style={{ padding: '0.6rem 0.75rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>CO₂e Abatement</span>
+                  <strong style={{ fontSize: '1.05rem', color: '#27AE60' }}>
+                    +{(weightKg * currentItem.co2PerKg).toFixed(2)} kg Saved
+                  </strong>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Action Row */}
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
-            <button
-              className="neo-btn neo-btn-primary"
-              style={{ flex: 1 }}
-              onClick={triggerScan}
-              disabled={isScanning}
-            >
-              <RefreshCw size={16} /> Re-Analyze Optical Frame
-            </button>
-            <button
-              className="neo-btn"
-              style={{ fontSize: '0.8125rem' }}
-              onClick={() => setShowDiagnosticsModal(true)}
-            >
-              <HelpCircle size={15} /> Troubleshooting Guide
-            </button>
+          {/* Card 2: Next Step: Circular Transformation (Moved to Left Column for perfect 50/50 balance) */}
+          <div className="neo-card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-medium)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+              <Factory size={18} color="var(--accent-green)" />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
+                Next Step: Circular Transformation
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+              Transform your deposited <strong>{currentItem.name}</strong> into a verified up-cycled product or route bulk stock to certified industrial recyclers.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <Link
+                to="/dashboard/machine"
+                className="neo-btn neo-btn-primary"
+                style={{ justifyContent: 'space-between', padding: '0.8rem 1rem', fontSize: '0.85rem' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Cpu size={16} /> Feed to EcoSynthesizer Machine
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', opacity: 0.9 }}>
+                  Yields {currentItem.machineOutput.split(' ')[0]} <ArrowRight size={14} />
+                </span>
+              </Link>
+              <Link
+                to="/dashboard/machine"
+                className="neo-btn"
+                style={{ justifyContent: 'space-between', padding: '0.8rem 1rem', fontSize: '0.85rem' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Factory size={16} /> Dispatch to Verified Recycler (Reliance / Supreme)
+                </span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
+
         </div>
 
-        {/* Right Column: Tactile Guidance Card */}
+        {/* Right Column: Tactile Guidance Card & Smart Deposit Protocol */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
           <div className="neo-card" style={{ position: 'relative' }}>
@@ -962,7 +1707,7 @@ export default function AIScanner() {
                   {currentItem.name}
                 </h2>
                 <div style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: '0.2rem' }}>
-                  EPR Tier: <strong>{currentItem.eprCategory}</strong>
+                  Polymer: <strong>{currentItem.polymer}</strong> • Tier: <strong>{currentItem.eprCategory}</strong>
                 </div>
               </div>
 
@@ -1095,6 +1840,24 @@ export default function AIScanner() {
               <CheckCircle2 size={20} /> Confirm Deposit &amp; Settle Incentive
             </button>
 
+            {/* Campus Up-Cycling Target Output Highlight */}
+            <div className="neo-inset" style={{ marginTop: '1.25rem', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'rgba(46, 204, 113, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--neo-green-dark)' }}>
+                <Cpu size={20} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.6875rem', textTransform: 'uppercase', fontWeight: 800, color: 'var(--text-tertiary)' }}>
+                  Campus Upcycling Target Output
+                </div>
+                <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {currentItem.machineOutput}
+                </div>
+              </div>
+              <Link to="/dashboard/machine" className="neo-circle-btn" style={{ width: '32px', height: '32px' }} title="Open EcoSynthesizer Plant">
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+
             {/* Trace Record Prompt & Auditing */}
             {lastTraceJson && (
               <div
@@ -1110,67 +1873,33 @@ export default function AIScanner() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem' }}>
-                  <ShieldCheck size={16} color="var(--neo-blue)" />
+                  <ShieldCheck size={16} color="var(--neo-green-dark)" />
                   <span>
-                    Verified Trace: <strong>{lastTraceJson.event_id}</strong>
+                    Verified Deposit Slip / रसीद: <strong style={{ color: 'var(--neo-green-dark)' }}>{lastTraceJson.event_id}</strong>
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
-                    className="neo-btn"
-                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }}
-                    onClick={() => setShowJsonModal(true)}
+                    className="neo-btn neo-btn-primary"
+                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem', fontWeight: 700 }}
+                    onClick={() => {
+                      setShowRawJsonView(false);
+                      setShowJsonModal(true);
+                    }}
                   >
-                    <Eye size={12} /> Inspect
+                    <Eye size={13} /> View Simple Receipt (रसीद देखें)
                   </button>
                   <button
                     className="neo-btn"
-                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }}
+                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.65rem' }}
                     onClick={downloadJsonTrace}
+                    title="Download CPCB Government Audit JSON"
                   >
-                    <Download size={12} /> JSON
+                    <Download size={13} /> JSON
                   </button>
                 </div>
               </div>
             )}
-          </div>
-
-          {/* ═══════════════════════════════════════════════════════════
-              NEW MODULE: UP-CYCLE MACHINE & RECYCLER INTEGRATION CARD
-              ═══════════════════════════════════════════════════════════ */}
-          <div className="neo-card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-medium)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-              <Factory size={18} color="var(--accent-green)" />
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-                Next Step: Circular Transformation
-              </h3>
-            </div>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Transform your deposited <strong>{currentItem.name}</strong> into a valuable finished product or route bulk stock to verified industrial recyclers.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              <Link
-                to="/dashboard/machine"
-                className="neo-btn neo-btn-primary"
-                style={{ justifyContent: 'space-between', padding: '0.75rem 1rem', fontSize: '0.85rem' }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Cpu size={15} /> Feed to EcoSynthesizer Machine
-                </span>
-                <ArrowRight size={15} />
-              </Link>
-              <Link
-                to="/dashboard/machine"
-                className="neo-btn"
-                style={{ justifyContent: 'space-between', padding: '0.75rem 1rem', fontSize: '0.85rem' }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Factory size={15} /> Dispatch to Verified Recycler (Reliance / Supreme)
-                </span>
-                <ArrowRight size={15} />
-              </Link>
-            </div>
           </div>
 
         </div>
@@ -1377,14 +2106,14 @@ export default function AIScanner() {
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          MODAL 3: CPCB EPR AUDITABLE JSON TRACE VIEWER
+          MODAL 3: VILLAGE-FRIENDLY VISUAL RECEIPT & CPCB AUDIT MODAL
           ═══════════════════════════════════════════════════════════ */}
       {showJsonModal && lastTraceJson && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'rgba(0,0,0,0.7)',
             backdropFilter: 'blur(8px)',
             zIndex: 1000,
             display: 'flex',
@@ -1396,46 +2125,219 @@ export default function AIScanner() {
         >
           <div
             className="neo-card-lg"
-            style={{ maxWidth: '640px', width: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}
+            style={{ maxWidth: '680px', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <div>
-                <h3 className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800 }}>
-                  CPCB EPR Digital Provenance Ledger
-                </h3>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                  Machine-verifiable JSON trace compliant with Central Pollution Control Board (India)
-                </span>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-light)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div className="neo-circle-btn" style={{ width: '40px', height: '40px', background: 'var(--neo-green)', color: '#fff', flexShrink: 0 }}>
+                  <CheckCircle2 size={22} />
+                </div>
+                <div>
+                  <h3 className="font-display" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
+                    Official Waste Deposit Receipt
+                  </h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    डिजिटल कचरा जमा एवं भुगतान रसीद • Campus Waste Certified
+                  </span>
+                </div>
               </div>
               <button className="neo-circle-btn" style={{ width: '36px', height: '36px' }} onClick={() => setShowJsonModal(false)}>
                 ✕
               </button>
             </div>
 
-            <pre
-              className="neo-inset"
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                fontSize: '0.78rem',
-                fontFamily: 'monospace',
-                padding: '1rem',
-                background: '#0D131A',
-                color: '#34D399',
-                borderRadius: 'var(--radius-md)'
-              }}
-            >
-              {JSON.stringify(lastTraceJson, null, 2)}
-            </pre>
+            {/* View Mode Toggle: Village-Friendly Simple Receipt vs Technical CPCB JSON */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', background: 'var(--bg-tertiary)', padding: '0.3rem', borderRadius: '10px' }}>
+              <button
+                className={`neo-btn ${!showRawJsonView ? 'active neo-btn-primary' : ''}`}
+                style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem', fontWeight: 700 }}
+                onClick={() => setShowRawJsonView(false)}
+              >
+                📄 आसान रसीद (Simple Receipt)
+              </button>
+              <button
+                className={`neo-btn ${showRawJsonView ? 'active neo-btn-primary' : ''}`}
+                style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem', fontWeight: 700 }}
+                onClick={() => setShowRawJsonView(true)}
+              >
+                💻 CPCB Government Audit (JSON Code)
+              </button>
+            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-              <button className="neo-btn" onClick={() => setShowJsonModal(false)}>
-                Close
+            {/* Body: Simple Village-Friendly Format */}
+            {!showRawJsonView ? (
+              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.35rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                
+                {/* Highlight Payout & Slip Card */}
+                <div className="neo-inset" style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, rgba(46, 204, 113, 0.12), rgba(52, 152, 219, 0.08))', border: '1px solid rgba(46, 204, 113, 0.35)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      <span className="neo-badge neo-badge-green" style={{ fontSize: '0.75rem', marginBottom: '0.4rem', fontWeight: 800 }}>
+                        <Check size={12} /> भुगतान सफल • Payment Settled via UPI
+                      </span>
+                      <div className="font-display" style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--neo-green-dark)', lineHeight: 1.1 }}>
+                        ₹{(lastTraceJson.financial_incentive?.inr_payout || (weightKg * currentItem.inrPerKg)).toFixed(2)}
+                      </div>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'block', marginTop: '0.2rem' }}>
+                        सीधे बैंक खाते / UPI में जमा (Instant Bank Payout)
+                      </span>
+                    </div>
+
+                    <div className="neo-card-sm" style={{ textAlign: 'right', padding: '0.6rem 0.85rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Green Points</span>
+                      <div className="font-display" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--neo-green-dark)' }}>
+                        +{(lastTraceJson.financial_incentive?.points_credited || (weightKg * currentItem.valuePerKg)).toFixed(2)} pts
+                      </div>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>1 pt = ₹1.00 Value</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px dashed rgba(46, 204, 113, 0.3)', fontSize: '0.8rem', color: 'var(--text-secondary)', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span>रसीद संख्या (Slip No): <strong style={{ color: 'var(--text-primary)' }}>{lastTraceJson.event_id}</strong></span>
+                    <span>तारीख व समय (Date &amp; Time): <strong style={{ color: 'var(--text-primary)' }}>{new Date(lastTraceJson.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</strong></span>
+                  </div>
+                </div>
+
+                {/* 4-Card Clear Waste Specification Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                  <div className="neo-card-sm" style={{ padding: '0.85rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>🍾</span>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase' }}>क्या जमा किया (Item Type)</span>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>{currentItem.name}</div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: currentItem.color, fontWeight: 700 }}>{currentItem.code} • {currentItem.polymer}</span>
+                  </div>
+
+                  <div className="neo-card-sm" style={{ padding: '0.85rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>⚖️</span>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase' }}>तौला गया वज़न (Net Mass)</span>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                          {((lastTraceJson.mass_g || 450) / 1000).toFixed(2)} kg ({lastTraceJson.mass_g || 450} ग्राम)
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--neo-green-dark)', fontWeight: 700 }}>डिजिटल तराजू पर प्रमाणित (Tare Calibrated)</span>
+                  </div>
+
+                  <div className="neo-card-sm" style={{ padding: '0.85rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>✨</span>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase' }}>सफाई व शुद्धता (Quality)</span>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--neo-green-dark)' }}>
+                          {((lastTraceJson.confidence_score || 0.94) * 100).toFixed(1)}% उच्च गुणवत्ता (Super Grade)
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>धुला हुआ, सूखा एवं ढक्कन अलग</span>
+                  </div>
+
+                  <div className="neo-card-sm" style={{ padding: '0.85rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>🗑️</span>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 800, textTransform: 'uppercase' }}>डिपॉजिट बिन (Which Bin)</span>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>Slot #01 • Blue Bin A</div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--neo-blue)', fontWeight: 700 }}>उच्च शुद्धता रीसाइक्लिंग डिब्बा</span>
+                  </div>
+                </div>
+
+                {/* Where Was It Deposited? */}
+                <div className="neo-card-sm" style={{ padding: '0.85rem 1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <MapPin size={20} color="var(--accent-green)" />
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 800 }}>जमा केंद्र का नाम व पता (Collection Depot)</div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>{lastTraceJson.station_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{station.ward} • GPS: {station.lat}° N, {station.lng}° E</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* What Happens Next? (आगे इस कचरे का क्या बनेगा?) */}
+                <div className="neo-inset" style={{ padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)' }}>
+                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, color: 'var(--text-tertiary)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Factory size={15} color="var(--neo-green-dark)" /> आगे क्या बनेगा? (Up-Cycling Journey)
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, marginBottom: '0.35rem' }}>
+                    ⚙️ <strong>Campus EcoSynthesizer मशीन</strong> द्वारा यह प्लास्टिक <strong>"{currentItem.machineOutput}"</strong> में तब्दील किया जाएगा।
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    🏭 थोक लॉट प्रमाणित रीसाइक्लर (Reliance Circular / Supreme) को भेजा जाता है।
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: '#27AE60', fontWeight: 700, marginTop: '0.35rem' }}>
+                    🌿 <strong>+{(((lastTraceJson.mass_g || 450) / 1000) * currentItem.co2PerKg).toFixed(2)} kg CO₂ वायु प्रदूषण रोका गया!</strong> स्वच्छ भारत में आपका योगदान।
+                  </div>
+                </div>
+
+                {/* Security Guarantee & Digital Hash Seal */}
+                <div style={{ padding: '0.65rem 0.85rem', background: 'rgba(52, 152, 219, 0.08)', borderRadius: '8px', border: '1px solid rgba(52, 152, 219, 0.25)', fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <ShieldCheck size={16} color="var(--neo-blue)" />
+                    <span>डिजिटल सुरक्षा मुहर (SHA-256): <code style={{ color: 'var(--text-primary)' }}>{lastTraceJson.provenance_hash?.substring(0, 20)}...</code></span>
+                  </div>
+                  <span style={{ color: 'var(--neo-green-dark)', fontWeight: 700 }}>CPCB Govt. Approved</span>
+                </div>
+
+              </div>
+            ) : (
+              /* Technical Raw JSON Code View */
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                <pre
+                  className="neo-inset"
+                  style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    fontSize: '0.78rem',
+                    fontFamily: 'monospace',
+                    padding: '1rem',
+                    background: '#0D131A',
+                    color: '#34D399',
+                    borderRadius: 'var(--radius-md)',
+                    margin: 0
+                  }}
+                >
+                  {JSON.stringify(lastTraceJson, null, 2)}
+                </pre>
+              </div>
+            )}
+
+            {/* Modal Footer Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-light)', flexWrap: 'wrap' }}>
+              <button
+                className="neo-btn"
+                style={{ fontSize: '0.8rem', padding: '0.5rem 0.85rem' }}
+                onClick={() => window.print()}
+                title="Print this receipt"
+              >
+                🖨️ Print / Save Receipt (रसीद प्रिंट करें)
               </button>
-              <button className="neo-btn neo-btn-primary" onClick={downloadJsonTrace}>
-                <Download size={16} /> Download .json Payload
-              </button>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className="neo-btn"
+                  style={{ fontSize: '0.8rem', padding: '0.5rem 0.85rem' }}
+                  onClick={downloadJsonTrace}
+                >
+                  <Download size={14} /> Download .json
+                </button>
+                <button
+                  className="neo-btn neo-btn-primary"
+                  style={{ fontSize: '0.8rem', padding: '0.5rem 1.25rem' }}
+                  onClick={() => setShowJsonModal(false)}
+                >
+                  Close (बंद करें)
+                </button>
+              </div>
             </div>
           </div>
         </div>

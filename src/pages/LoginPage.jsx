@@ -5,11 +5,15 @@ import { Recycle, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-r
 import toast from 'react-hot-toast';
 import './AuthPages.css';
 
+import { platformStore } from '../services/platformStore';
+
 const DEMO_USERS = {
   'admin@ecoloop.in': { name: 'Priya Sharma', role: 'admin', email: 'admin@ecoloop.in', avatar: 'PS' },
-  'ngo@ecoloop.in': { name: 'Green Earth NGO', role: 'ngo', email: 'ngo@ecoloop.in', avatar: 'GE' },
-  'volunteer@ecoloop.in': { name: 'Arjun Patel', role: 'volunteer', email: 'volunteer@ecoloop.in', avatar: 'AP' },
-  'hostel@ecoloop.in': { name: 'IIT Delhi Hostel', role: 'hostel', email: 'hostel@ecoloop.in', avatar: 'ID' },
+  'collector@ecoloop.in': { name: 'Ramesh Kumar', role: 'collector', email: 'collector@ecoloop.in', avatar: 'RK', collectorId: 'COL-2026-KABADI-01' },
+  'volunteer@ecoloop.in': { name: 'Ananya Deshmukh', role: 'volunteer', email: 'volunteer@ecoloop.in', avatar: 'AD', volunteerId: 'VOL-2026-E47A91BC' },
+  'recycler@ecoloop.in': { name: 'Reliance Circular Industries', role: 'recycler', email: 'recycler@ecoloop.in', avatar: 'RC', recyclerId: 'REC-001' },
+  'hostel@ecoloop.in': { name: 'Rajendra Bhawan Mess', role: 'hostel', email: 'hostel@ecoloop.in', avatar: 'RB' },
+  'ngo@ecoloop.in': { name: 'Green Earth Foundation', role: 'ngo', email: 'ngo@ecoloop.in', avatar: 'GE' },
 };
 
 export default function LoginPage() {
@@ -24,10 +28,14 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 1200));
+    // Simulate auth network response
+    await new Promise(r => setTimeout(r, 600));
     
-    const user = DEMO_USERS[email.toLowerCase()];
+    // Check platformStore users first, then fall back to DEMO_USERS
+    const storeUser = platformStore.getUserByEmail(email.toLowerCase());
+    const demoUser = DEMO_USERS[email.toLowerCase()];
+    const user = storeUser || demoUser;
+
     if (user && password.length >= 4) {
       login(user);
       toast.success(`Welcome back, ${user.name}!`);
@@ -38,8 +46,9 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const quickLogin = (email) => {
-    const user = DEMO_USERS[email];
+  const quickLogin = (userEmail) => {
+    const storeUser = platformStore.getUserByEmail(userEmail.toLowerCase());
+    const user = storeUser || DEMO_USERS[userEmail];
     login(user);
     toast.success(`Welcome, ${user.name}!`);
     navigate(getDashboardPath(user.role));
@@ -57,11 +66,11 @@ export default function LoginPage() {
         <div className="auth-hero">
           <Link to="/" className="auth-logo">
             <div className="logo-icon"><Recycle size={24} /></div>
-            <span className="logo-text">Eco<span className="gradient-text">Loop</span></span>
+            <span className="logo-text">Campus<span className="gradient-text">Waste</span></span>
           </Link>
           
           <div className="auth-hero-content">
-            <h2>Welcome Back to<br /><span className="gradient-text">EcoLoop</span></h2>
+            <h2>Welcome Back to<br /><span className="gradient-text">Campus Waste</span></h2>
             <p>Sign in to continue managing your recycling operations, track impact, and contribute to the circular economy.</p>
             
             <div className="auth-features">

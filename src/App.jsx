@@ -4,11 +4,14 @@ import { Toaster } from 'react-hot-toast';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import VerifyEmail from './pages/VerifyEmail';
 import DashboardLayout from './components/DashboardLayout';
 import AdminDashboard from './pages/dashboards/AdminDashboard';
+import CollectorDashboard from './pages/dashboards/CollectorDashboard';
 import NGODashboard from './pages/dashboards/NGODashboard';
 import VolunteerDashboard from './pages/dashboards/VolunteerDashboard';
 import HostelDashboard from './pages/dashboards/HostelDashboard';
+import RecyclerDashboard from './pages/dashboards/RecyclerDashboard';
 import AIScanner from './pages/AIScanner';
 import Marketplace from './pages/Marketplace';
 import Tracking from './pages/Tracking';
@@ -45,8 +48,10 @@ function App() {
   const getDashboardPath = (role) => {
     const paths = {
       admin: '/dashboard/admin',
-      ngo: '/dashboard/ngo',
+      collector: '/dashboard/collector',
       volunteer: '/dashboard/volunteer',
+      recycler: '/dashboard/recycler',
+      ngo: '/dashboard/ngo',
       hostel: '/dashboard/hostel'
     };
     return paths[role] || '/dashboard/admin';
@@ -71,13 +76,16 @@ function App() {
         />
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/login" element={user ? <Navigate to={getDashboardPath(user.role)} /> : <LoginPage />} />
           <Route path="/signup" element={user ? <Navigate to={getDashboardPath(user.role)} /> : <SignupPage />} />
           
           <Route path="/dashboard" element={user ? <DashboardLayout /> : <Navigate to="/login" />}>
             <Route path="admin" element={<AdminDashboard />} />
-            <Route path="ngo" element={<NGODashboard />} />
+            <Route path="collector" element={<CollectorDashboard />} />
             <Route path="volunteer" element={<VolunteerDashboard />} />
+            <Route path="recycler" element={<RecyclerDashboard />} />
+            <Route path="ngo" element={<NGODashboard />} />
             <Route path="hostel" element={<HostelDashboard />} />
             <Route path="scanner" element={<AIScanner />} />
             <Route path="marketplace" element={<Marketplace />} />
@@ -88,6 +96,7 @@ function App() {
             <Route path="machine" element={<WasteToProductMachine />} />
           </Route>
 
+          <Route path="/scanner" element={<Navigate to="/dashboard/scanner" />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>

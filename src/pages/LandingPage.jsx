@@ -5,7 +5,7 @@ import {
   Recycle, Camera, Sparkles, Shield, Truck, BarChart3,
   TrendingUp, Award, ArrowRight, CheckCircle2, ChevronRight,
   Sun, Moon, Zap, Layers, RefreshCw, Scale, Globe, Building2,
-  Users, Check, IndianRupee, Leaf, AlertCircle, Play, Pause,
+  Users, User, Check, IndianRupee, Leaf, AlertCircle, Play, Pause,
   Sliders, ChevronDown, HelpCircle, ExternalLink, QrCode,
   FileText, ShieldCheck, Clock, MapPin, Copy, AlertTriangle,
   Cpu, Factory, Package, Flame, Eye, Lock, ArrowUpRight,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './LandingPage.css';
+import CircularWorkflowSection from '../components/CircularWorkflowSection';
 import petBottleImg from '../assets/waste/pet_bottle.jpg';
 import hdpeJugImg from '../assets/waste/hdpe_jug.jpg';
 import foodWasteImg from '../assets/waste/food_waste.jpg';
@@ -67,7 +68,7 @@ const FIVE_LOOPS = [
     num: 'Loop 05',
     name: 'Trust Loop',
     flow: 'SHA-256 Hash Chain Ledger → Auditable CPCB/ESG Reports',
-    value: 'Auditable proof for judges, institute administration, and EPR credits.',
+    value: 'Auditable compliance proof for regulatory audits, institute administration, and EPR credits.',
     icon: ShieldCheck,
     color: '#EC4899',
     metric: '100% Tamper-Evident Ledger'
@@ -277,8 +278,8 @@ const INITIAL_LEDGER_CHAIN = [
   { event: 'COLLECTED', actor: 'Sanitation Collector (Ramesh K.)', id: 'LOT-ROORKEE-88', payload: 'Scanned QR-RAJ-B1, scale verified tare', prevHash: '0x8f2d4e1a9b7c', hash: '0x3c7a1e8f9b2d' },
   { event: 'WEIGHED', actor: 'MRF Weighbridge Operator', id: 'LOT-ROORKEE-88', payload: 'Gross: 39.1 kg | Net: 38.0 kg (2.8% moisture)', prevHash: '0x3c7a1e8f9b2d', hash: '0x6e9b2d3c7a1e' },
   { event: 'SORTED', actor: 'Sorting Yard Inspector', id: 'LOT-ROORKEE-88', payload: 'Polymer Purity Grade A (PET 96.2%)', prevHash: '0x6e9b2d3c7a1e', hash: '0x1a9b7c8f2d4e' },
-  { event: 'LISTED', actor: 'LoopIIT Marketplace Service', id: 'LOT-ROORKEE-88', payload: 'Reserve: ₹42.00/kg | AI Fair Range: ₹44-₹48', prevHash: '0x1a9b7c8f2d4e', hash: '0x7c8f2d4e1a9b' },
-  { event: 'SOLD', actor: 'Reliance Industries Circular (R-Elan)', id: 'LOT-ROORKEE-88', payload: 'Winning Bid: ₹48.50/kg (Instant Escrow)', prevHash: '0x7c8f2d4e1a9b', hash: '0x4e1a9b7c8f2d' },
+  { event: 'LISTED', actor: 'Campus Waste Marketplace Service', id: 'LOT-ROORKEE-88', payload: 'Reserve: ₹42.00/kg | AI Fair Range: ₹44-₹48', prevHash: '0x1a9b7c8f2d4e', hash: '0x7c8f2d4e1a9b' },
+  { event: 'SOLD', actor: 'Reliance Industries Circular (R-Elan)', id: 'LOT-ROORKEE-88', payload: 'Contract Awarded: ₹48.50/kg (Instant Escrow)', prevHash: '0x7c8f2d4e1a9b', hash: '0x4e1a9b7c8f2d' },
   { event: 'PROCESSED', actor: 'Dahej Polyester Fiber Plant', id: 'LOT-ROORKEE-88', payload: 'Flaked & Extruded into Recycled Filament', prevHash: '0x4e1a9b7c8f2d', hash: '0x9b7c8f2d4e1a' }
 ];
 
@@ -313,6 +314,10 @@ export default function LandingPage() {
   const [activeModuleIdx, setActiveModuleIdx] = useState(0);
   const [activeRole, setActiveRole] = useState('generator');
   const [openFaqIdx, setOpenFaqIdx] = useState(null);
+
+  // Dropdown states for navbar consolidation
+  const [consolesOpen, setConsolesOpen] = useState(false);
+  const [platformOpen, setPlatformOpen] = useState(false);
 
   // Active waste item in sandbox
   const currentItem = DEMO_WASTE_ITEMS[selectedItemIdx];
@@ -357,21 +362,116 @@ export default function LandingPage() {
             </div>
             <div>
               <span className="brand-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.45rem', fontWeight: 900 }}>
-                Loop<span className="gradient-text">IIT</span>
+                Campus<span className="gradient-text">Waste</span>
               </span>
               <span style={{ display: 'block', fontSize: '0.625rem', color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Sociothon 2026 • IIT Roorkee
+                AI-Powered Closed-Loop Waste Ecosystem
               </span>
             </div>
           </Link>
 
           <nav className="nav-menu">
-            <a href="#five-loops" className="nav-item-link">The 5 Loops</a>
-            <a href="#problem-matrix" className="nav-item-link">Problem Matrix</a>
-            <a href="#aiml-modules" className="nav-item-link">7 AI Modules</a>
-            <a href="#interactive-demo" className="nav-item-link">Interactive Sandbox</a>
-            <a href="#sub-themes" className="nav-item-link">Track 3 Themes</a>
-            <a href="#pilot-proof" className="nav-item-link">Pilot Proof</a>
+            {/* Consoles & Portals Dropdown */}
+            <div
+              className="nav-dropdown-wrapper"
+              onMouseEnter={() => setConsolesOpen(true)}
+              onMouseLeave={() => setConsolesOpen(false)}
+            >
+              <button
+                className={`nav-dropdown-trigger ${consolesOpen ? 'active' : ''}`}
+                onClick={() => setConsolesOpen(!consolesOpen)}
+                aria-expanded={consolesOpen}
+                type="button"
+              >
+                <span>Consoles &amp; Roles</span>
+                <ChevronDown size={14} style={{ transform: consolesOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+
+              {consolesOpen && (
+                <div className="nav-dropdown-menu">
+                  <Link to="/dashboard/volunteer" className="nav-dropdown-item" onClick={() => setConsolesOpen(false)}>
+                    <div className="nav-dropdown-icon" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981' }}>🌱</div>
+                    <div>
+                      <span className="nav-dropdown-title">Volunteer Portal</span>
+                      <span className="nav-dropdown-desc">Permanent ID, deposit waste, UPI incentive &amp; points</span>
+                    </div>
+                  </Link>
+                  <Link to="/dashboard/collector" className="nav-dropdown-item" onClick={() => setConsolesOpen(false)}>
+                    <div className="nav-dropdown-icon" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6' }}>🚛</div>
+                    <div>
+                      <span className="nav-dropdown-title">Collector Worklist</span>
+                      <span className="nav-dropdown-desc">Smart tare scale, CVRP-TW route &amp; MRF delivery</span>
+                    </div>
+                  </Link>
+                  <Link to="/dashboard/recycler" className="nav-dropdown-item" onClick={() => setConsolesOpen(false)}>
+                    <div className="nav-dropdown-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B' }}>🏭</div>
+                    <div>
+                      <span className="nav-dropdown-title">Recycler Intake Gate</span>
+                      <span className="nav-dropdown-desc">Inspect lots, signoff delivery &amp; confirm recovery</span>
+                    </div>
+                  </Link>
+                  <Link to="/dashboard/admin" className="nav-dropdown-item" onClick={() => setConsolesOpen(false)}>
+                    <div className="nav-dropdown-icon" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8B5CF6' }}>🛡️</div>
+                    <div>
+                      <span className="nav-dropdown-title">Admin Console</span>
+                      <span className="nav-dropdown-desc">SHA-256 audit, approve recycler intake &amp; UPI payouts</span>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Platform Architecture & Features Dropdown */}
+            <div
+              className="nav-dropdown-wrapper"
+              onMouseEnter={() => setPlatformOpen(true)}
+              onMouseLeave={() => setPlatformOpen(false)}
+            >
+              <button
+                className={`nav-dropdown-trigger ${platformOpen ? 'active' : ''}`}
+                onClick={() => setPlatformOpen(!platformOpen)}
+                aria-expanded={platformOpen}
+                type="button"
+              >
+                <span>Platform &amp; AI</span>
+                <ChevronDown size={14} style={{ transform: platformOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+
+              {platformOpen && (
+                <div className="nav-dropdown-menu">
+                  <Link to="/dashboard/scanner" className="nav-dropdown-item" onClick={() => setPlatformOpen(false)}>
+                    <div className="nav-dropdown-icon" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981' }}>📷</div>
+                    <div>
+                      <span className="nav-dropdown-title">AI Camera Scanner</span>
+                      <span className="nav-dropdown-desc">Live optical PWVO tensor segregation &amp; video recording</span>
+                    </div>
+                  </Link>
+                  <a href="#interactive-demo" className="nav-dropdown-item" onClick={() => setPlatformOpen(false)}>
+                    <div className="nav-dropdown-icon" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6' }}>⚡</div>
+                    <div>
+                      <span className="nav-dropdown-title">Interactive Sandbox</span>
+                      <span className="nav-dropdown-desc">5-step live simulation with Grad-CAM &amp; tare scale</span>
+                    </div>
+                  </a>
+                  <a href="#five-loops" className="nav-dropdown-item" onClick={() => setPlatformOpen(false)}>
+                    <div className="nav-dropdown-icon" style={{ background: 'rgba(236, 72, 153, 0.15)', color: '#EC4899' }}>🔄</div>
+                    <div>
+                      <span className="nav-dropdown-title">5 Circular Loops</span>
+                      <span className="nav-dropdown-desc">Closed-loop framework: Material, Energy, Trust</span>
+                    </div>
+                  </a>
+                  <a href="#aiml-framework" className="nav-dropdown-item" onClick={() => setPlatformOpen(false)}>
+                    <div className="nav-dropdown-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B' }}>🤖</div>
+                    <div>
+                      <span className="nav-dropdown-title">7 AI/ML Engines</span>
+                      <span className="nav-dropdown-desc">YOLOv8, LightGBM, OR-Tools &amp; Isolation Forest</span>
+                    </div>
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <a href="#problem-matrix" className="nav-item-link">Solutions Matrix</a>
           </nav>
 
           <div className="nav-actions">
@@ -410,7 +510,7 @@ export default function LandingPage() {
           <div className="hero-left-column">
             <div className="hero-pill-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
               <Sparkles size={14} color="var(--accent-green)" />
-              <span>SOCIOTHON 2026 (IIT Roorkee) | Track 3: Recycling &amp; Waste-to-Resource</span>
+              <span>Next-Gen Circular Economy &amp; Intelligent Waste Recovery Platform</span>
             </div>
 
             <h1 className="hero-main-title">
@@ -419,7 +519,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="hero-sub-text">
-              <strong>LoopIIT</strong> eliminates the nuisance of campus garbage by closing the loop end-to-end. 
+              <strong>Campus Waste</strong> eliminates the nuisance of campus garbage by closing the loop end-to-end. 
               A phone photo and QR sticker guide source segregation with Grad-CAM explainability, LightGBM forecasting and 
               Google OR-Tools dynamic routing direct collectors, a reverse-auction marketplace sells clean lots to industrial recyclers, 
               mess food waste returns as compost to campus gardens, and a SHA-256 chain-of-custody ledger guarantees tamper-evident provenance.
@@ -434,6 +534,25 @@ export default function LandingPage() {
               </a>
               <Link to="/dashboard/machine" className="modern-btn" style={{ padding: '0.9rem 1.6rem', fontSize: '1rem', background: 'var(--accent-green-subtle)', borderColor: 'var(--accent-green)', color: 'var(--accent-green)' }}>
                 <Cpu size={18} /> EcoSynthesizer &amp; Recyclers
+              </Link>
+            </div>
+
+            {/* Quick 4-Dashboard System Access Pills */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '2.25rem' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                4 Core Dashboards:
+              </span>
+              <Link to="/dashboard/volunteer" className="modern-badge neo-badge-green" style={{ textDecoration: 'none', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+                <User size={13} /> 1. Volunteer (Permanent ID)
+              </Link>
+              <Link to="/dashboard/collector" className="modern-badge neo-badge-blue" style={{ textDecoration: 'none', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+                <Truck size={13} /> 2. Collector (Tare Scale)
+              </Link>
+              <Link to="/dashboard/recycler" className="modern-badge neo-badge-orange" style={{ textDecoration: 'none', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+                <Building2 size={13} /> 3. Recyclable Company (Signoff)
+              </Link>
+              <Link to="/dashboard/admin" className="modern-badge neo-badge-purple" style={{ textDecoration: 'none', padding: '0.45rem 0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+                <Shield size={13} /> 4. Admin (Approve Payment)
               </Link>
             </div>
 
@@ -463,7 +582,7 @@ export default function LandingPage() {
             <div className="modern-card modern-card-lg" style={{ position: 'relative', overflow: 'hidden', padding: '1.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                 <span className="modern-badge neo-badge-green">
-                  <ShieldCheck size={14} /> LoopIIT Closed-Loop Flow
+                  <ShieldCheck size={14} /> Campus Waste Closed-Loop Flow
                 </span>
                 <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--accent-green)' }}>
                   IIT ROORKEE PILOT
@@ -500,7 +619,7 @@ export default function LandingPage() {
               </div>
 
               <div style={{ marginTop: '1.25rem', padding: '0.85rem', background: 'var(--bg-primary)', borderRadius: '10px', border: '1px dashed var(--border-medium)', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                <strong>Winning Edge:</strong> Most teams build a bin-detector. LoopIIT connects segregation, dynamic collection, pricing, compost returns, and tamper-evident SHA-256 ledgers into one measurable loop.
+                <strong>Key Architectural Advantage:</strong> Campus Waste integrates segregation, dynamic collection routing, transparent pricing, compost recovery, and tamper-evident SHA-256 ledgers into one unified, measurable loop.
               </div>
             </div>
           </div>
@@ -509,20 +628,24 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 1: PROBLEM STATEMENT ANALYSIS MATRIX (Slide 2)
-          "Read as a judge would. Every sentence hides an evaluation criterion"
+          CIRCULAR SUSTAINABILITY JOURNEY WORKFLOW
+          Volunteer → Collector → Admin → Recycling Company → Volunteer
+          ═══════════════════════════════════════════════════════════ */}
+      <CircularWorkflowSection />
+
+      {/* ═══════════════════════════════════════════════════════════
+          SECTION 1: SYSTEM REQUIREMENTS & OPERATIONAL SOLUTIONS
           ═══════════════════════════════════════════════════════════ */}
       <section id="problem-matrix" className="solution-matrix-section">
         <div className="section-headline-center">
           <span className="modern-badge neo-badge-blue">
-            <FileText size={14} /> Evaluation Criteria Mapping
+            <FileText size={14} /> Institutional Operations &amp; Impact Matrix
           </span>
           <h2 className="section-h2">
-            Analysing the Problem Statement: <span className="gradient-text">How LoopIIT Wins</span>
+            Campus Challenges &amp; <span className="gradient-text">Engineered Solutions</span>
           </h2>
           <p className="section-p">
-            Read the Sociothon Track 3 brief as a judge would. Every sentence hides a strict scoring criterion. 
-            Here is the exact mapping of each requirement into what LoopIIT visibly delivers.
+            Addressing critical institutional waste pain points with scalable AI automation, dynamic logistics, transparent markets, and verifiable environmental metrics.
           </p>
         </div>
 
@@ -530,15 +653,15 @@ export default function LandingPage() {
           <table className="matrix-table">
             <thead>
               <tr>
-                <th style={{ width: '22%' }}>Phrase in the Brief</th>
-                <th style={{ width: '38%' }}>What It Really Means</th>
-                <th style={{ width: '40%' }}>How LoopIIT Answers It</th>
+                <th style={{ width: '25%' }}>Institutional Challenge</th>
+                <th style={{ width: '35%' }}>Operational Bottleneck</th>
+                <th style={{ width: '40%' }}>Engineered Solution</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><strong>Improper segregation</strong></td>
-                <td>People do not know or care how to sort waste at the point of disposal.</td>
+                <td>Unclear segregation guidelines leading to contaminated waste streams at source.</td>
                 <td><span className="matrix-badge-sol">AI photo check at source</span> + instant feedback + green points &amp; inter-hostel leaderboards.</td>
               </tr>
               <tr>
@@ -549,42 +672,41 @@ export default function LandingPage() {
               <tr>
                 <td><strong>Limited recycling infra</strong></td>
                 <td>Small isolated lots sell cheap; no verified industrial buyers visible.</td>
-                <td><span className="matrix-badge-sol">Lot aggregation</span> + reverse-auction bidding marketplace for recyclers and local kabadiwalas.</td>
+                <td><span className="matrix-badge-sol">Lot aggregation</span> + reverse-auction bidding marketplace for recyclers and local collectors.</td>
               </tr>
               <tr>
                 <td><strong>Lack of real-time monitoring</strong></td>
-                <td>Nobody sees kg generated per hostel or mess per day.</td>
+                <td>Campus administration lacks live visibility on waste volume generated per facility.</td>
                 <td><span className="matrix-badge-sol">Live dashboard</span>, WebSocket event stream, automated anomaly alerts &amp; monthly exports.</td>
               </tr>
               <tr>
                 <td><strong>Affordable and scalable</strong></td>
-                <td>Cannot afford expensive IoT load-cell sensors on every campus bin.</td>
+                <td>Prohibitive hardware expenditure on high-maintenance IoT load-cell sensors.</td>
                 <td><span className="matrix-badge-sol">Phone camera + QR sticker</span>; multi-tenant architecture scalable to any campus or municipality.</td>
               </tr>
               <tr>
                 <td><strong>Practical, real-world conditions</strong></td>
-                <td>Must survive messy photos, dark hostel lighting, weak 4G connectivity.</td>
-                <td><span className="matrix-badge-sol">Offline-first PWA</span>, client-side compression, trained on 300+ local IIT Roorkee photos.</td>
+                <td>Must operate under variable lighting, blurry captures, and low connectivity.</td>
+                <td><span className="matrix-badge-sol">Offline-first PWA</span>, client-side compression, trained on 300+ local campus test photos.</td>
               </tr>
               <tr>
                 <td><strong>Measurable environmental impact</strong></td>
-                <td>Judges demand concrete numbers and verified formulas, not adjectives.</td>
+                <td>Institutions require concrete quantitative metrics and verified mass-balance formulas.</td>
                 <td><span className="matrix-badge-sol">Exact math</span>: kg diverted, CO₂e avoided (US EPA WARM), ₹ earned, km saved via VRP.</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* The Winning Insight Banner */}
+        {/* The Closed-Loop Advantage Banner */}
         <div style={{ marginTop: '2rem', padding: '1.25rem 1.75rem', borderRadius: '14px', background: 'var(--accent-green-subtle)', border: '1px solid var(--accent-green)', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <Sparkles size={28} color="var(--accent-green)" style={{ flexShrink: 0 }} />
           <div>
             <strong style={{ fontSize: '1rem', color: 'var(--accent-green)', display: 'block', marginBottom: '0.2rem' }}>
-              The Winning Insight (Slide 2)
+              The Closed-Loop Advantage
             </strong>
             <span style={{ fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
-              Most teams will build a bin-detector or a simple app. Few will connect segregation, collection, selling and processing 
-              as one measurable loop with real predictive AI. That integrated loop, backed by pilot numbers, is our edge.
+              By connecting waste segregation, dynamic collector dispatch, fair marketplace bidding, and organic composting into a single transparent ledger, Campus Waste delivers measurable, verifiable circular economy outcomes.
             </span>
           </div>
         </div>
@@ -762,22 +884,22 @@ export default function LandingPage() {
           );
         })()}
 
-        {/* ML Credibility Rule Callout (Slide 6) */}
+        {/* Model Transparency & Edge Calibration */}
         <div style={{ marginTop: '2rem', padding: '1.25rem 1.75rem', borderRadius: '14px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-medium)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <AlertCircle size={24} color="var(--accent-orange)" style={{ flexShrink: 0 }} />
           <div>
             <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)', display: 'block', marginBottom: '0.2rem' }}>
-              ML Credibility Rule (Slide 6)
+              Model Transparency &amp; Edge Calibration
             </strong>
             <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-              Always state limitations honestly (calibrated synthetic generator, small pilot, confidence intervals). Judges trust teams that measure and disclose real numbers more than teams that claim impossible 99% accuracy.
+              Models are calibrated against real-world lighting, blur, and dirty packaging conditions with automated fallback to human inspection when classification confidence falls below 0.60.
             </span>
           </div>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 4: INTERACTIVE DEMO SANDBOX (Slide 10)
+          SECTION 4: INTERACTIVE DEMO SANDBOX
           End-to-End Walkthrough with Grad-CAM & Hash Chain Verification
           ═══════════════════════════════════════════════════════════ */}
       <section id="interactive-demo" className="workflow-section">
@@ -789,7 +911,7 @@ export default function LandingPage() {
             Experience the <span className="gradient-text">Complete End-to-End Flow</span>
           </h2>
           <p className="section-p">
-            Test the entire loop as judges will during the 5-minute presentation: from QR bin scan and Grad-CAM AI inspection, 
+            Experience the complete institutional circular flow: from QR bin scan and Grad-CAM AI inspection, 
             to collector dynamic routing, reverse-auction marketplace bidding, and SHA-256 ledger verification.
           </p>
         </div>
@@ -1095,7 +1217,7 @@ export default function LandingPage() {
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>8 Nodes Visited</div>
                   </div>
                   <div style={{ padding: '1rem', borderRadius: '10px', background: 'var(--accent-green-subtle)', border: '1px solid var(--accent-green)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-green)' }}>LoopIIT Dynamic Route</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-green)' }}>Campus Waste Dynamic Route</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-green)' }}>8.75 km</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--accent-green)' }}>5 Nodes (3 Empty Skipped)</div>
                   </div>
@@ -1258,18 +1380,18 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 5: THE 4 SUB-THEMES OF TRACK 3 (Slide 2)
+          SECTION 5: RESOURCE RECOVERY PILLARS
           ═══════════════════════════════════════════════════════════ */}
       <section id="sub-themes" className="categories-section">
         <div className="section-headline-center">
           <span className="modern-badge neo-badge-blue">
-            <Layers size={14} /> Full Track 3 Alignment
+            <Layers size={14} /> Resource Recovery Framework
           </span>
           <h2 className="section-h2">
-            The 4 Sub-Themes: <span className="gradient-text">Complete Coverage</span>
+            Core Operational Pillars: <span className="gradient-text">Comprehensive Coverage</span>
           </h2>
           <p className="section-p">
-            LoopIIT covers every single sub-theme declared in the official Sociothon Track 3 problem description.
+            Campus Waste provides end-to-end capabilities across segregation, logistics, marketplace valuation, and circular re-manufacturing.
           </p>
         </div>
 
@@ -1283,7 +1405,7 @@ export default function LandingPage() {
                 <div>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>{theme.bullet}</h3>
                   <div style={{ fontSize: '0.75rem', color: 'var(--accent-green)', fontWeight: 700 }}>
-                    LoopIIT Module: {theme.loopModule}
+                    Platform Module: {theme.loopModule}
                   </div>
                 </div>
               </div>
@@ -1392,23 +1514,22 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════
-          SECTION 7: PILOT PROOF, IMPACT & JUDGE Q&A (Slide 13)
+          SECTION 7: OPERATIONAL VALIDATION & FAQS
           ═══════════════════════════════════════════════════════════ */}
       <section id="pilot-proof" className="solution-matrix-section">
         <div className="section-headline-center">
           <span className="modern-badge neo-badge-green">
-            <Award size={14} /> IIT Roorkee Pilot Proof &amp; Winning Strategy
+            <Award size={14} /> Operational Validation &amp; Architecture FAQ
           </span>
           <h2 className="section-h2">
-            Proven Results &amp; <span className="gradient-text">Judging Strategy</span>
+            Deployment Results &amp; <span className="gradient-text">Frequently Asked Questions</span>
           </h2>
           <p className="section-p">
-            Straight answers to the hardest questions judges ask. Backed by pilot numbers, transparent assumptions, 
-            and verified emission models.
+            Clear, transparent answers to core operational, logistical, and sustainability questions, backed by real campus data and verified mathematical emission models.
           </p>
         </div>
 
-        {/* 6 Judge Q&A from Slide 13 */}
+        {/* Operational & Architectural FAQ Grid */}
         <div className="judge-qa-grid">
           {[
             {
@@ -1421,19 +1542,19 @@ export default function LandingPage() {
             },
             {
               q: 'How accurate is the AI in the real world?',
-              a: 'We evaluate on our local IIT Roorkee 300+ campus photo test set (blurry lighting, messy hostel bins) achieving 94.8% Top-1 accuracy, with an automated fallback to human confirmation below 0.6 confidence.'
+              a: 'We evaluate on our local 300+ campus photo test set (blurry lighting, messy hostel bins) achieving 94.8% Top-1 accuracy, with an automated fallback to human confirmation below 0.6 confidence.'
             },
             {
               q: 'Why would industrial recyclers join?',
-              a: 'Recyclers spend 30% of their operational budget hunting clean feedstock. LoopIIT guarantees clean, aggregated, quality-graded lots with traceable provenance that fulfills their legal CPCB EPR targets.'
+              a: 'Recyclers spend 30% of their operational budget hunting clean feedstock. Campus Waste guarantees clean, aggregated, quality-graded lots with traceable provenance that fulfills their legal CPCB EPR targets.'
             },
             {
               q: 'How is the kabadiwala not displaced?',
-              a: 'Local scrap collectors are first-class users in LoopIIT. They receive optimized collection routes, transparent market pricing benchmarks, and earn higher commissions through bulk lot aggregation.'
+              a: 'Local scrap collectors are first-class users in Campus Waste. They receive optimized collection routes, transparent market pricing benchmarks, and earn higher commissions through bulk lot aggregation.'
             },
             {
-              q: 'Is the data real or mocked?',
-              a: 'Pilot numbers are from real IIT Roorkee hostel & mess runs; historical backfills are generated using calibrated statistical distributions (labeled transparently with academic fests and exam dips).'
+              q: 'Is the data real or modeled?',
+              a: 'Deployment metrics are from real campus hostel & mess runs; historical backfills are generated using calibrated statistical distributions (labeled transparently with academic cycles and holidays).'
             }
           ].map((item, idx) => (
             <div key={idx} className="modern-card" style={{ padding: '1.5rem' }}>
@@ -1447,13 +1568,13 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* The One-Paragraph Winning Pitch (Slide 15) */}
+        {/* Mission Statement Banner */}
         <div style={{ marginTop: '3rem', padding: '2rem', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--accent-green)', textAlign: 'center' }}>
           <div className="modern-badge neo-badge-green" style={{ margin: '0 auto 1rem' }}>
-            The 60-Second Winning Pitch (Slide 15)
+            Our Closed-Loop Mission
           </div>
           <blockquote style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', maxWidth: '900px', margin: '0 auto', lineHeight: 1.6 }}>
-            "LoopIIT turns campus waste into a tracked, priced and rewarded resource. A photo and a QR scan tell people how to segregate, forecasting and route optimisation tell collectors where to go, a marketplace sells clean lots to recyclers at better prices, a food loop returns compost to our gardens, and a tamper-evident ledger proves every kilogram's journey. It runs on a phone and a sticker, it includes the kabadiwala economy, and in our pilot it diverted 4,280 kg and cut collection distance by 38.4%."
+            "Campus Waste turns institutional waste into a tracked, priced, and rewarded resource. A photo and QR scan guide users to segregate correctly, forecasting and route optimization guide collectors efficiently, a marketplace matches segregated lots with verified industrial recyclers, an organic loop returns nutrient-rich compost to green spaces, and a tamper-evident ledger proves every kilogram's journey with zero greenwashing."
           </blockquote>
         </div>
       </section>
@@ -1461,63 +1582,67 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════════
           FOOTER
           ═══════════════════════════════════════════════════════════ */}
-      <footer className="footer-section">
-        <div className="footer-top">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-              <div className="brand-icon-box" style={{ width: '32px', height: '32px' }}>
-                <Recycle size={18} />
+      <footer className="modern-footer">
+        <div className="footer-container">
+          <div className="footer-top">
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <div className="brand-icon-box" style={{ width: '32px', height: '32px' }}>
+                  <Recycle size={18} />
+                </div>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 900 }}>
+                  Campus<span className="gradient-text">Waste</span>
+                </span>
               </div>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 900 }}>
-                Loop<span className="gradient-text">IIT</span>
-              </span>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', maxWidth: '320px', lineHeight: 1.5 }}>
+                AI-Powered Closed-Loop Waste Ledger &amp; Marketplace. Transforming institutional waste streams into verified, traceable circular resources.
+              </p>
             </div>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', maxWidth: '320px', lineHeight: 1.5 }}>
-              AI-Powered Closed-Loop Waste Ledger &amp; Marketplace. Built for Sociothon 2026 (IIT Roorkee) — Track 3: Recycling &amp; Waste-to-Resource Solutions.
-            </p>
+
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.875rem', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>The 5 Closed Loops</div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <li>• Segregation Loop (Grad-CAM)</li>
+                <li>• Collection Loop (OR-Tools VRP)</li>
+                <li>• Market Loop (Kabadiwala Auction)</li>
+                <li>• Food Loop (Compost Return)</li>
+                <li>• Trust Loop (SHA-256 Ledger)</li>
+              </ul>
+            </div>
+
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.875rem', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>Tech Stack</div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <li>• PWA: Next.js 14 / React</li>
+                <li>• ML: MobileNetV3 + ONNX</li>
+                <li>• Optimisation: Google OR-Tools</li>
+                <li>• Forecasting: LightGBM / Prophet</li>
+                <li>• CPCB EPR JSON Trace</li>
+              </ul>
+            </div>
+
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.875rem', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>Campus Operations</div>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                Hostels: Rajendra, Jawahar, Govind.<br />
+                Zero Hardware Deployment: Phone + QR.<br />
+                Auditable without blockchain gas fees.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '0.875rem', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>The 5 Closed Loops</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <li>• Segregation Loop (Grad-CAM)</li>
-              <li>• Collection Loop (OR-Tools VRP)</li>
-              <li>• Market Loop (Kabadiwala Auction)</li>
-              <li>• Food Loop (Compost Return)</li>
-              <li>• Trust Loop (SHA-256 Ledger)</li>
-            </ul>
-          </div>
-
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '0.875rem', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>Tech Stack</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <li>• PWA: Next.js 14 / React</li>
-              <li>• ML: MobileNetV3 + ONNX</li>
-              <li>• Optimisation: Google OR-Tools</li>
-              <li>• Forecasting: LightGBM / Prophet</li>
-              <li>• CPCB EPR JSON Trace</li>
-            </ul>
-          </div>
-
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '0.875rem', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>IIT Roorkee Pilot</div>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Hostels: Rajendra, Jawahar, Govind.<br />
-              Zero Hardware Deployment: Phone + QR.<br />
-              Auditable without blockchain gas fees.
-            </p>
-          </div>
-        </div>
-
-        <div className="footer-bottom">
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            © 2026 LoopIIT — SOCIOTHON 2026 Track 3 Winner Prototype. All rights reserved.
-          </span>
-          <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-            <a href="#problem-matrix">Evaluation Matrix</a>
-            <a href="#aiml-modules">7 AI Modules</a>
-            <a href="#interactive-demo">Interactive Demo</a>
-            <Link to="/dashboard/scanner">AI Camera</Link>
+          <div className="footer-bottom">
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              © 2026 Campus Waste. All rights reserved.
+            </span>
+            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', flexWrap: 'wrap', alignItems: 'center' }}>
+              <Link to="/dashboard/volunteer" style={{ color: 'var(--accent-green)', fontWeight: 600 }}>Volunteer Console</Link>
+              <Link to="/dashboard/collector" style={{ color: 'var(--neo-blue)', fontWeight: 600 }}>Collector Console</Link>
+              <Link to="/dashboard/recycler" style={{ color: 'var(--accent-orange)', fontWeight: 600 }}>Recycler Portal</Link>
+              <Link to="/dashboard/admin" style={{ color: 'var(--accent-purple)', fontWeight: 600 }}>Admin Console</Link>
+              <a href="#interactive-demo">5-Step Demo</a>
+              <Link to="/dashboard/scanner">AI Camera</Link>
+            </div>
           </div>
         </div>
       </footer>

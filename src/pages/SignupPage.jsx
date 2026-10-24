@@ -5,15 +5,19 @@ import { Recycle, Mail, Lock, User, ArrowRight, Eye, EyeOff, Building2, Users, S
 import toast from 'react-hot-toast';
 import './AuthPages.css';
 
+import { Truck } from 'lucide-react';
+import { platformStore } from '../services/platformStore';
+
 const ROLES = [
-  { value: 'admin', label: 'Admin', icon: Shield, desc: 'Platform administrator' },
-  { value: 'ngo', label: 'NGO Partner', icon: Building2, desc: 'Organization managing campaigns' },
-  { value: 'volunteer', label: 'Volunteer', icon: Users, desc: 'Collection volunteer / agent' },
-  { value: 'hostel', label: 'Hostel / Institution', icon: Award, desc: 'Institutional waste manager' },
+  { value: 'volunteer', label: 'Volunteer / Donor', icon: Users, desc: 'Contribute recyclable waste & earn transparent UPI rewards' },
+  { value: 'collector', label: 'Field Collector / Hauler', icon: Truck, desc: 'Weigh collections, generate proposals & transport to recyclers' },
+  { value: 'admin', label: 'Platform Administrator', icon: Shield, desc: 'Approve collections, configure rates & manage recyclers' },
+  { value: 'hostel', label: 'Hostel / Institution', icon: Award, desc: 'Institutional hostel mess and bulk waste management' },
+  { value: 'ngo', label: 'NGO Partner', icon: Building2, desc: 'Social sustainability and community campaigns' }
 ];
 
 export default function SignupPage() {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'volunteer', phone: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'volunteer', phone: '', address: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -25,19 +29,31 @@ export default function SignupPage() {
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 800));
     
-    const user = {
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-      avatar: formData.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-    };
-    
-    login(user);
-    toast.success(`Welcome to EcoLoop, ${user.name}! 🎉`);
-    navigate(getDashboardPath(user.role));
-    setLoading(false);
+    try {
+      // Register through platformStore to ensure permanent collision-resistant Volunteer ID & Email verification token
+      const newUser = platformStore.registerUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        phone: formData.phone,
+        address: formData.address
+      });
+
+      login(newUser);
+      if (newUser.volunteerId) {
+        toast.success(`Account created! Permanent Volunteer ID: ${newUser.volunteerId}. Please check email for verification link.`);
+      } else {
+        toast.success(`Welcome to Campus Waste, ${newUser.name}!`);
+      }
+      navigate(getDashboardPath(newUser.role));
+    } catch (err) {
+      toast.error(err.message || 'Registration failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,7 +68,7 @@ export default function SignupPage() {
         <div className="auth-hero">
           <Link to="/" className="auth-logo">
             <div className="logo-icon"><Recycle size={24} /></div>
-            <span className="logo-text">Eco<span className="gradient-text">Loop</span></span>
+            <span className="logo-text">Campus<span className="gradient-text">Waste</span></span>
           </Link>
           
           <div className="auth-hero-content">
