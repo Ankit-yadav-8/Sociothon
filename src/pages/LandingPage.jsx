@@ -13,6 +13,10 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './LandingPage.css';
+import petBottleImg from '../assets/waste/pet_bottle.jpg';
+import hdpeJugImg from '../assets/waste/hdpe_jug.jpg';
+import foodWasteImg from '../assets/waste/food_waste.jpg';
+import ewastePcbImg from '../assets/waste/ewaste_pcb.jpg';
 
 // ═══════════════════════════════════════════════════════════
 // 1. THE FIVE LOOPS SPECIFICATIONS (Slide 3)
@@ -207,6 +211,7 @@ const CAMPUS_LOCATIONS = [
 const DEMO_WASTE_ITEMS = [
   {
     id: 'pet_bottle',
+    label: '🧴 Clear PET Bottle',
     name: 'Clear Rigid PET Bottle',
     polymer: 'PET (RIC-1) // Super Class A',
     category: 'Plastic Waste',
@@ -215,11 +220,13 @@ const DEMO_WASTE_ITEMS = [
     co2PerKg: 2.1,
     confidence: 0.96,
     gradCamFocus: 'Neck finish, transparent sidewall, and RIC-1 recycling symbol',
-    sampleImg: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&auto=format&fit=crop&q=80',
-    binSlot: 'Blue Bin A — High Purity Clear PET'
+    sampleImg: petBottleImg,
+    binSlot: 'Blue Bin A — High Purity Clear PET',
+    box: { x: 38, y: 14, w: 24, h: 74 }
   },
   {
     id: 'hdpe_container',
+    label: '🧼 HDPE Detergent Jug',
     name: 'HDPE Opaque Detergent Jug',
     polymer: 'HDPE (RIC-2) // Super Class B',
     category: 'Plastic Waste',
@@ -228,11 +235,13 @@ const DEMO_WASTE_ITEMS = [
     co2PerKg: 2.6,
     confidence: 0.93,
     gradCamFocus: 'Opaque handle curvature, molded parting line, rigid base',
-    sampleImg: 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=800&auto=format&fit=crop&q=80',
-    binSlot: 'Blue Bin B — Colored Rigid HDPE'
+    sampleImg: hdpeJugImg,
+    binSlot: 'Blue Bin B — Colored Rigid HDPE',
+    box: { x: 38, y: 26, w: 26, h: 50 }
   },
   {
     id: 'food_waste',
+    label: '🍲 Mess Food Waste',
     name: 'Jawahar Mess Lunch Food Scrap',
     polymer: 'Organic Kitchen Biomass',
     category: 'Food Waste',
@@ -241,11 +250,13 @@ const DEMO_WASTE_ITEMS = [
     co2PerKg: 0.9,
     confidence: 0.95,
     gradCamFocus: 'Vegetable peel textures, moisture glint, cooked rice grain cluster',
-    sampleImg: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop&q=80',
-    binSlot: 'Green Organic Station — Composter Hopper'
+    sampleImg: foodWasteImg,
+    binSlot: 'Green Organic Station — Composter Hopper',
+    box: { x: 18, y: 32, w: 66, h: 56 }
   },
   {
     id: 'ewaste_circuit',
+    label: '💻 PCB & E-Waste',
     name: 'Lithium Cell & PCB Motherboard',
     polymer: 'E-Waste Schedule I (FR-4 / Li-Ion)',
     category: 'E-Waste',
@@ -254,8 +265,9 @@ const DEMO_WASTE_ITEMS = [
     co2PerKg: 14.8,
     confidence: 0.97,
     gradCamFocus: 'SMD capacitor grids, gold-plated edge connectors, battery terminal',
-    sampleImg: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
-    binSlot: 'Purple Safe Vault — Urban Mining Depository'
+    sampleImg: ewastePcbImg,
+    binSlot: 'Purple Safe Vault — Urban Mining Depository',
+    box: { x: 16, y: 38, w: 68, h: 56 }
   }
 ];
 
@@ -895,9 +907,9 @@ export default function LandingPage() {
                       key={item.id}
                       onClick={() => setSelectedItemIdx(idx)}
                       className={`modern-btn ${selectedItemIdx === idx ? 'modern-btn-primary' : ''}`}
-                      style={{ fontSize: '0.75rem', padding: '0.45rem 0.85rem', whiteSpace: 'nowrap' }}
+                      style={{ fontSize: '0.8rem', padding: '0.5rem 0.95rem', whiteSpace: 'nowrap', fontWeight: selectedItemIdx === idx ? 800 : 600 }}
                     >
-                      {item.name.split(' ')[0]}
+                      {item.label}
                     </button>
                   ))}
                 </div>
@@ -958,7 +970,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Viewfinder Graphic with Grad-CAM Overlay */}
+              {/* Viewfinder Graphic with Grad-CAM Overlay & Bounding Box */}
               <div className="gradcam-preview-box">
                 <img
                   src={currentItem.sampleImg}
@@ -971,8 +983,42 @@ export default function LandingPage() {
                   <div className="gradcam-heatmap"></div>
                 )}
 
+                {/* Real-time Bounding Box */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${currentItem.box.x}%`,
+                    top: `${currentItem.box.y}%`,
+                    width: `${currentItem.box.w}%`,
+                    height: `${currentItem.box.h}%`,
+                    border: '2px solid var(--accent-green)',
+                    borderRadius: '8px',
+                    boxShadow: '0 0 15px rgba(16, 185, 129, 0.6), inset 0 0 10px rgba(16, 185, 129, 0.25)',
+                    pointerEvents: 'none',
+                    zIndex: 5,
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-24px',
+                      left: '0',
+                      background: 'var(--accent-green)',
+                      color: '#0A0E17',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.7rem',
+                      fontWeight: 800,
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {currentItem.polymer.split(' ')[0]} • {(currentItem.confidence * 100).toFixed(0)}%
+                  </div>
+                </div>
+
                 {/* Heatmap HUD Tag */}
-                <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', background: 'rgba(10, 14, 23, 0.85)', backdropFilter: 'blur(8px)', padding: '8px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', background: 'rgba(10, 14, 23, 0.85)', backdropFilter: 'blur(8px)', padding: '8px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', zIndex: 6 }}>
                   <span>Grad-CAM: <strong style={{ color: 'var(--accent-green)' }}>{showGradCam ? 'Active Heatmap' : 'Disabled'}</strong></span>
                   <span>Target: <strong>{currentItem.binSlot}</strong></span>
                 </div>

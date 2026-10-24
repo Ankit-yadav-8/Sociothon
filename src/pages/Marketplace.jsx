@@ -4,6 +4,7 @@ import {
   Filter, ShieldCheck, Check, Clock, IndianRupee, Layers, Tag
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import petBottleImg from '../assets/waste/pet_bottle.jpg';
 
 const COMMODITY_LOTS = [
   {
@@ -19,7 +20,7 @@ const COMMODITY_LOTS = [
     polymer: 'PET (RIC-1)',
     cpcbCertified: true,
     location: 'New Delhi, NCR',
-    img: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=600&auto=format&fit=crop&q=80'
+    img: petBottleImg
   },
   {
     id: 'LOT-9924',

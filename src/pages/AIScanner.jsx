@@ -8,6 +8,10 @@ import {
   CheckCircle, ArrowUpRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import petBottleImg from '../assets/waste/pet_bottle.jpg';
+import hdpeJugImg from '../assets/waste/hdpe_jug.jpg';
+import foodWasteImg from '../assets/waste/food_waste.jpg';
+import ewastePcbImg from '../assets/waste/ewaste_pcb.jpg';
 
 // 47-Category PWVO Ontology & YOLOE-26 Detection Profiles
 const WASTE_DATABASE = [
@@ -31,7 +35,7 @@ const WASTE_DATABASE = [
       { step: 3, text: 'Compress bottle vertically to optimize baler frame volume.' },
       { step: 4, text: 'Deposit into Blue Bin A (Slot #01 - High Purity Stream).' }
     ],
-    sampleImg: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&auto=format&fit=crop&q=80',
+    sampleImg: petBottleImg,
     machineOutput: '3D Printing Filament Spool (rPET)'
   },
   {
@@ -54,7 +58,7 @@ const WASTE_DATABASE = [
       { step: 3, text: 'Flatten base container.' },
       { step: 4, text: 'Deposit into Blue Bin B (Slot #02 - Colored HDPE).' }
     ],
-    sampleImg: 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=800&auto=format&fit=crop&q=80',
+    sampleImg: hdpeJugImg,
     machineOutput: 'High-Density Interlocking Eco-Paver Block'
   },
   {
@@ -100,7 +104,7 @@ const WASTE_DATABASE = [
       { step: 3, text: 'Handle with anti-static protection if available.' },
       { step: 4, text: 'Handover to Authorized Urban Mining Vault (Station Safe #09).' }
     ],
-    sampleImg: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
+    sampleImg: ewastePcbImg,
     machineOutput: 'Recycled Precious Metal & Copper Ingot (Attero)'
   },
   {
@@ -123,7 +127,7 @@ const WASTE_DATABASE = [
       { step: 3, text: 'Deposit into Smart Composter / Micro-drying Hopper #03.' },
       { step: 4, text: 'Collect organic soil amendment compost credits.' }
     ],
-    sampleImg: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80',
+    sampleImg: foodWasteImg,
     machineOutput: 'Micro-Dried Bio-Pellet Fertilizer (NPK 4-2-2)'
   }
 ];
