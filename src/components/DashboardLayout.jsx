@@ -67,7 +67,7 @@ export default function DashboardLayout() {
   };
 
   return (
-    <div className={`dashboard-layout ${sidebarOpen ? '' : 'sidebar-collapsed'}`}>
+    <div className={`dashboard-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}`}>
       
       {/* Sidebar */}
       <aside className="sidebar">

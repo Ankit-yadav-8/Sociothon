@@ -1,48 +1,67 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 /* ═══════════════════════════════════════════════════════════
-   ECOLOOP NEOMORPHIC & TACTILE DESIGN SYSTEM
-   Soft UI Off-White (#E0E5EC / #F0F3F8) + Dark Mode Support
+   ECOLOOP MASTER NEOMORPHIC & TACTILE DESIGN SYSTEM
+   Soft UI Dual-Shadow Architecture (Light #E0E5EC / Dark #181C24)
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* Neomorphic Soft UI Palette */
+  /* Core Neomorphic Canvas */
   --neo-bg: #E0E5EC;
-  --neo-bg-alt: #F0F3F8;
+  --neo-bg-alt: #E8EDF5;
   --neo-surface-light: #FFFFFF;
-  --neo-surface-dark: #A3B1C6;
-  --neo-surface-darker: #8899B0;
+  --neo-surface-dark: #B2BECF;
+  --neo-surface-darker: #9BAEC4;
   
-  /* Primary & Accent Accents */
-  --neo-green: #2ECC71;
-  --neo-green-dark: #27AE60;
-  --neo-green-glow: rgba(46, 204, 113, 0.35);
+  /* Primary & Accent Spectrum */
+  --neo-green: #10B981;
+  --neo-green-dark: #059669;
+  --neo-green-glow: rgba(16, 185, 129, 0.4);
   
-  --neo-blue: #3498DB;
-  --neo-blue-dark: #2980B9;
-  --neo-blue-glow: rgba(52, 152, 219, 0.35);
+  --neo-blue: #3B82F6;
+  --neo-blue-dark: #2563EB;
+  --neo-blue-glow: rgba(59, 130, 246, 0.4);
   
-  --neo-orange: #E67E22;
-  --neo-red: #E74C3C;
-  --neo-purple: #9B59B6;
+  --neo-orange: #F59E0B;
+  --neo-red: #EF4444;
+  --neo-purple: #8B5CF6;
+  --neo-cyan: #06B6D4;
   
-  /* Text */
-  --text-primary: #2C3E50;
-  --text-secondary: #5A6B7C;
-  --text-tertiary: #7F8C8D;
-  --text-muted: #95A5A6;
+  /* Typography Text Hierarchy */
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --text-tertiary: #64748B;
+  --text-muted: #94A3B8;
   
-  /* Neomorphic Shadows */
-  --shadow-extruded: 9px 9px 16px var(--neo-surface-dark), -9px -9px 16px var(--neo-surface-light);
-  --shadow-extruded-sm: 5px 5px 10px var(--neo-surface-dark), -5px -5px 10px var(--neo-surface-light);
-  --shadow-extruded-lg: 14px 14px 26px var(--neo-surface-dark), -14px -14px 26px var(--neo-surface-light);
+  /* Precision Neomorphic Physics Shadows (Light Mode) */
+  --shadow-extruded: 10px 10px 20px var(--neo-surface-dark), -10px -10px 20px var(--neo-surface-light);
+  --shadow-extruded-sm: 5px 5px 12px var(--neo-surface-dark), -5px -5px 12px var(--neo-surface-light);
+  --shadow-extruded-lg: 16px 16px 32px var(--neo-surface-dark), -16px -16px 32px var(--neo-surface-light);
+  --shadow-extruded-hover: 12px 12px 24px var(--neo-surface-dark), -12px -12px 24px var(--neo-surface-light);
   
-  --shadow-inset: inset 6px 6px 10px var(--neo-surface-dark), inset -6px -6px 10px var(--neo-surface-light);
+  --shadow-inset: inset 6px 6px 12px var(--neo-surface-dark), inset -6px -6px 12px var(--neo-surface-light);
   --shadow-inset-sm: inset 3px 3px 6px var(--neo-surface-dark), inset -3px -3px 6px var(--neo-surface-light);
   --shadow-inset-lg: inset 8px 8px 16px var(--neo-surface-dark), inset -8px -8px 16px var(--neo-surface-light);
   
-  --shadow-concave: linear-gradient(145deg, #cad0d8, #f0f5fc);
-  --shadow-convex: linear-gradient(145deg, #f0f5fc, #cad0d8);
+  --shadow-concave: linear-gradient(145deg, #d3dbe6, #edf2fa);
+  --shadow-convex: linear-gradient(145deg, #edf2fa, #d3dbe6);
+  --shadow-flat: #E0E5EC;
+  
+  /* Legacy & Universal Compatibility Aliases */
+  --bg-primary: var(--neo-bg);
+  --bg-secondary: var(--neo-bg);
+  --bg-card: var(--neo-bg);
+  --bg-hover: rgba(255, 255, 255, 0.5);
+  --border-light: rgba(178, 190, 207, 0.35);
+  --border-focus: var(--neo-green);
+  --primary-400: var(--neo-green);
+  --primary-500: var(--neo-green-dark);
+  --gradient-primary: linear-gradient(135deg, var(--neo-green), var(--neo-green-dark));
+  --gradient-hero: linear-gradient(135deg, #E0E5EC, #E8EDF5);
+  --header-height: 74px;
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 80px;
+  --transition-base: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   
   /* Fonts */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -51,39 +70,51 @@
   /* Spacing & Radii */
   --radius-sm: 10px;
   --radius-md: 16px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-xl: 30px;
+  --radius-2xl: 36px;
   --radius-full: 9999px;
   
   --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark Mode Theme */
+/* ═══════════════════════════════════════════════════════════
+   DARK NEOMORPHIC THEME (Charcoal Slate / Obsidian)
+   ═══════════════════════════════════════════════════════════ */
 [data-theme='dark'] {
-  --neo-bg: #121820;
-  --neo-bg-alt: #171F2A;
-  --neo-surface-light: #1A2432;
-  --neo-surface-dark: #0A0E13;
-  --neo-surface-darker: #06090D;
+  --neo-bg: #161A22;
+  --neo-bg-alt: #1B212B;
+  --neo-surface-light: #202733;
+  --neo-surface-dark: #0C0F14;
+  --neo-surface-darker: #07090C;
   
-  --text-primary: #F0F4F8;
-  --text-secondary: #B0C0D0;
-  --text-tertiary: #7D8F9F;
-  --text-muted: #566472;
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-tertiary: #94A3B8;
+  --text-muted: #64748B;
   
-  --shadow-extruded: 8px 8px 18px #080C10, -8px -8px 18px #1C2634;
-  --shadow-extruded-sm: 4px 4px 10px #080C10, -4px -4px 10px #1C2634;
-  --shadow-extruded-lg: 14px 14px 28px #080C10, -14px -14px 28px #1C2634;
+  --shadow-extruded: 9px 9px 18px var(--neo-surface-dark), -9px -9px 18px var(--neo-surface-light);
+  --shadow-extruded-sm: 4px 4px 10px var(--neo-surface-dark), -4px -4px 10px var(--neo-surface-light);
+  --shadow-extruded-lg: 15px 15px 30px var(--neo-surface-dark), -15px -15px 30px var(--neo-surface-light);
+  --shadow-extruded-hover: 12px 12px 24px var(--neo-surface-dark), -12px -12px 24px var(--neo-surface-light);
   
-  --shadow-inset: inset 5px 5px 10px #080C10, inset -5px -5px 10px #1C2634;
-  --shadow-inset-sm: inset 3px 3px 6px #080C10, inset -3px -3px 6px #1C2634;
-  --shadow-inset-lg: inset 8px 8px 16px #080C10, inset -8px -8px 16px #1C2634;
+  --shadow-inset: inset 5px 5px 10px var(--neo-surface-dark), inset -5px -5px 10px var(--neo-surface-light);
+  --shadow-inset-sm: inset 3px 3px 6px var(--neo-surface-dark), inset -3px -3px 6px var(--neo-surface-light);
+  --shadow-inset-lg: inset 8px 8px 16px var(--neo-surface-dark), inset -8px -8px 16px var(--neo-surface-light);
   
-  --shadow-concave: linear-gradient(145deg, #0e141a, #161e28);
-  --shadow-convex: linear-gradient(145deg, #161e28, #0e141a);
+  --shadow-concave: linear-gradient(145deg, #13171e, #1a202a);
+  --shadow-convex: linear-gradient(145deg, #1a202a, #13171e);
+  --shadow-flat: #161A22;
+  
+  --bg-primary: var(--neo-bg);
+  --bg-secondary: var(--neo-bg);
+  --bg-card: var(--neo-bg);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --border-light: rgba(32, 39, 51, 0.7);
+  --gradient-hero: linear-gradient(135deg, #161A22, #1B212B);
 }
 
-/* Reset & Base */
+/* Base Reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -119,17 +150,27 @@ input, textarea, select {
   background: transparent;
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* ═══════════════════════════════════════════════════════════
-   NEOMORPHIC UTILITIES
+   TACTILE NEOMORPHIC PRIMITIVES
    ═══════════════════════════════════════════════════════════ */
 
-/* Extruded / Raised */
+/* Extruded Cards (Raised Surface) */
 .neo-card {
   background: var(--neo-bg);
   box-shadow: var(--shadow-extruded);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   transition: var(--transition);
+  position: relative;
+}
+
+.neo-card:hover {
+  box-shadow: var(--shadow-extruded-hover);
 }
 
 .neo-card-sm {
@@ -144,39 +185,39 @@ input, textarea, select {
   background: var(--neo-bg);
   box-shadow: var(--shadow-extruded-lg);
   border-radius: var(--radius-xl);
-  padding: 2rem;
+  padding: 2.25rem;
   transition: var(--transition);
 }
 
-/* Inset / Pressed wells */
-.neo-inset {
+/* Inset Concave Wells (Pressed into chassis) */
+.neo-inset, .neo-well {
   background: var(--neo-bg);
   box-shadow: var(--shadow-inset);
   border-radius: var(--radius-md);
-  padding: 1rem;
+  padding: 1.25rem;
 }
 
 .neo-inset-sm {
   background: var(--neo-bg);
   box-shadow: var(--shadow-inset-sm);
   border-radius: var(--radius-sm);
-  padding: 0.5rem 0.875rem;
+  padding: 0.625rem 0.875rem;
 }
 
 .neo-inset-lg {
   background: var(--neo-bg);
   box-shadow: var(--shadow-inset-lg);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 1.75rem;
 }
 
-/* Neomorphic Buttons */
+/* Neomorphic Buttons with Mechanical Tactile Press */
 .neo-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.625rem;
-  padding: 0.75rem 1.35rem;
+  padding: 0.75rem 1.4rem;
   border-radius: var(--radius-md);
   background: var(--neo-bg);
   box-shadow: var(--shadow-extruded-sm);
@@ -190,14 +231,16 @@ input, textarea, select {
 .neo-btn:hover {
   box-shadow: var(--shadow-extruded);
   transform: translateY(-2px);
+  color: var(--neo-green);
 }
 
 .neo-btn:active, .neo-btn.active {
   box-shadow: var(--shadow-inset-sm);
-  transform: scale(0.98);
+  transform: translateY(1px) scale(0.98);
+  color: var(--neo-green-dark);
 }
 
-/* Primary Eco-Green Button */
+/* Primary Vibrant Neomorphic Button */
 .neo-btn-primary {
   background: linear-gradient(135deg, var(--neo-green), var(--neo-green-dark));
   color: #FFFFFF !important;
@@ -213,11 +256,11 @@ input, textarea, select {
 }
 
 .neo-btn-primary:active {
-  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.35), inset -4px -4px 8px rgba(255, 255, 255, 0.2);
-  transform: scale(0.98);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.4), inset -4px -4px 8px rgba(255, 255, 255, 0.2);
+  transform: translateY(1px) scale(0.98);
 }
 
-/* Secondary Ocean Blue Button */
+/* Secondary Button */
 .neo-btn-secondary {
   background: linear-gradient(135deg, var(--neo-blue), var(--neo-blue-dark));
   color: #FFFFFF !important;
@@ -233,14 +276,14 @@ input, textarea, select {
 }
 
 .neo-btn-secondary:active {
-  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.35);
-  transform: scale(0.98);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px) scale(0.98);
 }
 
-/* Circle Neomorphic Well Button */
+/* Circle Neomorphic Button */
 .neo-circle-btn {
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
@@ -259,40 +302,14 @@ input, textarea, select {
 
 .neo-circle-btn:active, .neo-circle-btn.active {
   box-shadow: var(--shadow-inset-sm);
-  transform: scale(0.95);
+  transform: translateY(1px) scale(0.95);
   color: var(--neo-green);
 }
 
-/* Floating Action Button */
-.neo-fab {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--neo-green), var(--neo-green-dark));
-  color: #FFFFFF;
-  box-shadow: 8px 8px 18px var(--neo-surface-dark), -8px -8px 18px var(--neo-surface-light),
-              0 0 24px var(--neo-green-glow);
-  transition: var(--transition);
-}
-
-.neo-fab:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 12px 12px 24px var(--neo-surface-dark), -12px -12px 24px var(--neo-surface-light),
-              0 0 32px var(--neo-green-glow);
-}
-
-.neo-fab:active {
-  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.4);
-  transform: scale(0.96);
-}
-
-/* Inset Input Field */
+/* Inset Inputs */
 .neo-input {
   width: 100%;
-  padding: 0.875rem 1.15rem;
+  padding: 0.85rem 1.15rem;
   border-radius: var(--radius-md);
   background: var(--neo-bg);
   box-shadow: var(--shadow-inset);
@@ -310,97 +327,144 @@ input, textarea, select {
   color: var(--text-muted);
 }
 
-/* Badge tags */
+/* Neomorphic Badges & Pills */
 .neo-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.85rem;
   border-radius: var(--radius-full);
   font-size: 0.75rem;
   font-weight: 700;
   box-shadow: var(--shadow-extruded-sm);
   background: var(--neo-bg);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 
 .neo-badge-green {
-  color: var(--neo-green-dark);
-  border: 1px solid rgba(46, 204, 113, 0.4);
-  background: rgba(46, 204, 113, 0.08);
+  color: var(--neo-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .neo-badge-blue {
   color: var(--neo-blue);
-  border: 1px solid rgba(52, 152, 219, 0.4);
-  background: rgba(52, 152, 219, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .neo-badge-orange {
   color: var(--neo-orange);
-  border: 1px solid rgba(230, 126, 34, 0.4);
-  background: rgba(230, 126, 34, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
-.neo-badge-red {
-  color: var(--neo-red);
-  border: 1px solid rgba(231, 76, 60, 0.4);
-  background: rgba(231, 76, 60, 0.08);
+.neo-badge-purple {
+  color: var(--neo-purple);
+  border: 1px solid rgba(139, 92, 246, 0.3);
 }
 
-/* Progress bar */
-.neo-progress-track {
+/* Neomorphic Sliders */
+.neo-slider {
+  -webkit-appearance: none;
   width: 100%;
   height: 12px;
   border-radius: var(--radius-full);
   background: var(--neo-bg);
   box-shadow: var(--shadow-inset-sm);
-  padding: 2px;
-  overflow: hidden;
+  outline: none;
 }
 
-.neo-progress-fill {
-  height: 100%;
-  border-radius: var(--radius-full);
-  background: linear-gradient(90deg, var(--neo-green), var(--neo-blue));
-  box-shadow: 0 0 10px var(--neo-green-glow);
-  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+.neo-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neo-green), var(--neo-green-dark));
+  cursor: pointer;
+  box-shadow: 4px 4px 8px var(--neo-surface-dark), -4px -4px 8px var(--neo-surface-light),
+              0 0 10px var(--neo-green-glow);
+  transition: transform 0.15s ease;
 }
 
-/* Typography Helpers */
+.neo-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.neo-slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neo-green), var(--neo-green-dark));
+  cursor: pointer;
+  border: none;
+  box-shadow: 4px 4px 8px var(--neo-surface-dark), -4px -4px 8px var(--neo-surface-light),
+              0 0 10px var(--neo-green-glow);
+}
+
+/* Typography & Layout Helpers */
 .font-display {
   font-family: var(--font-display);
 }
 
-.gradient-text-neo {
-  background: linear-gradient(135deg, var(--neo-green-dark), var(--neo-blue));
+.gradient-text {
+  background: linear-gradient(135deg, var(--neo-green), #059669);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Layout Utilities */
+.gradient-text-accent {
+  background: linear-gradient(135deg, var(--neo-blue), #8B5CF6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .container-max {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 1.25rem;
+  padding: 0 1.5rem;
 }
 
-/* Pulse animation */
-@keyframes neo-pulse {
+/* Animations */
+@keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.5);
+    box-shadow: 0 0 8px var(--neo-green-glow);
   }
   50% {
-    box-shadow: 0 0 0 14px rgba(46, 204, 113, 0);
+    box-shadow: 0 0 20px var(--neo-green-glow), 0 0 30px var(--neo-green-glow);
   }
 }
 
-.pulse-station {
-  animation: neo-pulse 2s infinite;
+.pulse-led {
+  animation: pulseGlow 2.5s infinite;
 }
 
-/* Custom Scrollbar for Inset Elements */
+@keyframes laserSweep {
+  0% {
+    top: 5%;
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: 92%;
+    opacity: 0.2;
+  }
+}
+
+.scan-laser-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--neo-green), transparent);
+  box-shadow: 0 0 14px var(--neo-green);
+  animation: laserSweep 2s ease-in-out infinite alternate;
+  z-index: 10;
+}
+
+/* Custom Inset Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
