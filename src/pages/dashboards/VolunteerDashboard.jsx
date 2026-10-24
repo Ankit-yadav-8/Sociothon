@@ -26,9 +26,15 @@ export default function VolunteerDashboard() {
 
   // Real or active volunteer profile
   const [currentVolunteer, setCurrentVolunteer] = useState(() => {
-    // If logged in user is volunteer, retrieve their full profile from store
-    const storeUser = platformStore.getUserByEmail(user?.email || 'volunteer@ecoloop.in');
-    return storeUser || (platformStore.getUsers() && platformStore.getUsers().find(u => u.role === 'volunteer')) || DEFAULT_VOLUNTEER;
+    const emailToLookup = user?.email || 'volunteer@ecoloop.in';
+    const storeUser = platformStore.getUserByEmail(emailToLookup);
+    if (storeUser) {
+      if (!storeUser.volunteerId) {
+        storeUser.volunteerId = platformStore.generateUniqueVolunteerId();
+      }
+      return storeUser;
+    }
+    return platformStore.ensureVolunteerRegistered(user) || DEFAULT_VOLUNTEER;
   });
 
   const [metrics, setMetrics] = useState(() => 
@@ -53,11 +59,12 @@ export default function VolunteerDashboard() {
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
   const refreshData = () => {
-    const updatedUser = platformStore.getUserByEmail(currentVolunteer?.email);
+    const updatedUser = platformStore.getUserByEmail(currentVolunteer?.email || user?.email);
     if (updatedUser) setCurrentVolunteer(updatedUser);
-    if (currentVolunteer?.volunteerId) {
-      setCollections(platformStore.getCollectionsForVolunteer(currentVolunteer.volunteerId));
-      setMetrics(platformStore.getVolunteerMetrics(currentVolunteer.volunteerId));
+    const activeVId = updatedUser?.volunteerId || currentVolunteer?.volunteerId;
+    if (activeVId) {
+      setCollections(platformStore.getCollectionsForVolunteer(activeVId));
+      setMetrics(platformStore.getVolunteerMetrics(activeVId));
     }
   };
 
@@ -126,13 +133,22 @@ export default function VolunteerDashboard() {
       // Find a default collector to pair with
       const collector = platformStore.getAllCollectors()[0] || { collectorId: 'COL-2026-KABADI-01', name: 'Ramesh Kumar' };
       
+      // Ensure volunteer ID is verified in platform registry
+      let activeVId = currentVolunteer?.volunteerId || user?.volunteerId;
+      let verifiedVolunteer = platformStore.findVolunteerById(activeVId);
+      if (!verifiedVolunteer) {
+        verifiedVolunteer = platformStore.ensureVolunteerRegistered(currentVolunteer || user);
+        activeVId = verifiedVolunteer.volunteerId;
+        setCurrentVolunteer(verifiedVolunteer);
+      }
+
       const proposal = platformStore.createProposal({
-        volunteerId: currentVolunteer.volunteerId,
+        volunteerId: activeVId,
         collectorId: collector.collectorId,
         collectorName: collector.name,
         category: newCategory,
         weightKg: parseFloat(newEstWeight),
-        location: newLocation
+        location: newLocation || verifiedVolunteer.address || 'Sarojini Bhawan Room 204, IIT Roorkee'
       });
 
       toast.success(`Collection request #${proposal.id} submitted! Collector ${collector.name} assigned.`);
@@ -392,10 +408,7 @@ export default function VolunteerDashboard() {
         )}
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════
-          SECTION 2: SUBMIT COLLECTION REQUEST / PROPOSAL (LEFT) + ACTIVE LIFECYCLE (RIGHT)
-          ═══════════════════════════════════════════════════════════ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) minmax(320px, 1.4fr)', gap: '1.75rem', marginBottom: '2.5rem' }}>
+      <div className="responsive-two-col" style={{ marginBottom: '2.5rem' }}>
         
         {/* Left Column: Submit New Collection Request */}
         <div className="neo-card" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -559,7 +572,7 @@ export default function VolunteerDashboard() {
                     </div>
 
                     {/* Visual Progress Steps */}
-                    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${stages.length}, 1fr)`, gap: '4px', margin: '0.75rem 0' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${stages.length}, minmax(70px, 1fr))`, gap: '6px', margin: '0.75rem 0', overflowX: 'auto', paddingBottom: '4px' }}>
                       {stages.map((st, i) => {
                         const isDone = i <= currentStageIdx;
                         const isCurrent = i === currentStageIdx;

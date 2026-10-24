@@ -79,7 +79,7 @@ export default function Analytics() {
       </div>
 
       {/* Charts Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.3fr) minmax(320px, 1fr)', gap: '1.75rem', marginBottom: '1.75rem' }}>
+      <div className="responsive-two-col" style={{ marginBottom: '1.75rem' }}>
         
         {/* Monthly Diversion Trends */}
         <div className="neo-card">

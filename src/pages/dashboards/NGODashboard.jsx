@@ -74,7 +74,7 @@ export default function NGODashboard() {
       </div>
 
       {/* Impact Cards */}
-      <div className="impact-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div className="impact-cards responsive-grid-4" style={{ marginBottom: '1.5rem' }}>
         {impactMetrics.map((m, i) => (
           <div key={i} className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{m.icon}</div>

@@ -107,13 +107,15 @@ export default function Tracking() {
           className="neo-inset"
           style={{
             position: 'relative',
-            height: '160px',
+            minHeight: '160px',
             borderRadius: 'var(--radius-lg)',
             overflow: 'hidden',
             background: '#0B1118',
             display: 'flex',
-            alignItems: 'center',
-            padding: '0 2rem'
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: '1.25rem 1rem',
+            gap: '1rem'
           }}
         >
           {/* Moving Conveyor Lines */}
@@ -130,9 +132,8 @@ export default function Tracking() {
           {/* Overhead Multi-Spectral Camera Rig */}
           <div
             style={{
-              position: 'absolute',
-              top: '10px',
-              left: '42%',
+              display: 'inline-flex',
+              alignSelf: 'center',
               padding: '4px 14px',
               borderRadius: 'var(--radius-full)',
               background: 'rgba(46, 204, 113, 0.2)',
@@ -141,7 +142,6 @@ export default function Tracking() {
               fontSize: '0.72rem',
               fontWeight: 700,
               zIndex: 10,
-              display: 'flex',
               alignItems: 'center',
               gap: '6px'
             }}
@@ -150,26 +150,26 @@ export default function Tracking() {
           </div>
 
           {/* Target Ejection Zones */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', position: 'relative', zIndex: 5 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', width: '100%', gap: '0.65rem', position: 'relative', zIndex: 5 }}>
             {[
-              { label: 'Ejection Zone 1 (PET Bottles)', count: '4,820 kg', color: '#2ECC71' },
-              { label: 'Ejection Zone 2 (HDPE Jugs)', count: '3,410 kg', color: '#3498DB' },
-              { label: 'Ejection Zone 3 (Multilayer MLP)', count: '2,190 kg', color: '#E67E22' },
-              { label: 'Residual Stream (Inert)', count: '840 kg', color: '#95A5A6' },
+              { label: 'Zone 1 (PET)', count: '4,820 kg', color: '#2ECC71' },
+              { label: 'Zone 2 (HDPE)', count: '3,410 kg', color: '#3498DB' },
+              { label: 'Zone 3 (MLP)', count: '2,190 kg', color: '#E67E22' },
+              { label: 'Residual (Inert)', count: '840 kg', color: '#95A5A6' },
             ].map((zone, idx) => (
               <div
                 key={idx}
                 style={{
-                  padding: '0.75rem 1rem',
+                  padding: '0.65rem 0.75rem',
                   borderRadius: '12px',
                   background: 'rgba(10, 15, 24, 0.9)',
                   border: `1.5px solid ${zone.color}`,
                   textAlign: 'center',
-                  minWidth: '150px'
+                  minWidth: 0
                 }}
               >
                 <div style={{ fontSize: '0.7rem', color: zone.color, fontWeight: 700 }}>{zone.label}</div>
-                <strong style={{ fontSize: '1rem', color: '#FFFFFF' }}>{zone.count}</strong>
+                <strong style={{ fontSize: '0.95rem', color: '#FFFFFF' }}>{zone.count}</strong>
               </div>
             ))}
           </div>

@@ -1,178 +1,287 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
-import { Recycle, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
+import {
+  Recycle, ArrowRight, Shield, Users, Truck, Factory,
+  Building2, Globe, Sparkles, AlertCircle, Camera, CheckCircle2,
+  Lock, ArrowLeft
+} from 'lucide-react';
 import toast from 'react-hot-toast';
+import { platformStore } from '../services/platformStore';
 import './AuthPages.css';
 
-import { platformStore } from '../services/platformStore';
+export const DEMO_PERSONAS = [
+  {
+    role: 'admin',
+    name: 'Priya Sharma',
+    email: 'admin@ecoloop.in',
+    volunteerId: 'VOL-2026-ADM9901A',
+    avatar: 'PS',
+    badge: 'Platform Administrator',
+    icon: Shield,
+    color: '#8B5CF6',
+    tag: 'Full Governance Access',
+    description: 'Master control center: SHA-256 ledger audits, CPCB reporting, reward rate configuration & instant UPI payout authorization.',
+    capabilities: [
+      'SHA-256 tamper-evident ledger audits',
+      'Benchmark waste reward rate matrix',
+      'Authorize recycler-verified UPI disbursements'
+    ],
+    path: '/dashboard/admin'
+  },
+  {
+    role: 'volunteer',
+    name: 'Ananya Deshmukh',
+    email: 'volunteer@ecoloop.in',
+    volunteerId: 'VOL-2026-E47A91BC',
+    avatar: 'AD',
+    badge: 'Volunteer Donor',
+    icon: Users,
+    color: '#10B981',
+    tag: 'Campus Resident / Student',
+    description: 'Individual contributor console: AI optical camera scanner, permanent Volunteer ID, green points balance & instant UPI redemption.',
+    capabilities: [
+      'Live AI camera scanner with Grad-CAM',
+      'Permanent Volunteer ID & doorstep requests',
+      'Green points balance & instant UPI redemption'
+    ],
+    path: '/dashboard/volunteer'
+  },
+  {
+    role: 'collector',
+    name: 'Ramesh Kumar',
+    email: 'collector@ecoloop.in',
+    volunteerId: 'VOL-2026-COL4421K',
+    collectorId: 'COL-2026-KABADI-01',
+    avatar: 'RK',
+    badge: 'Field Collector',
+    icon: Truck,
+    color: '#3B82F6',
+    tag: 'Sanitation Hauler',
+    description: 'Field operations portal: OR-Tools CVRP-TW route optimizer, Bluetooth tare scale, QR verification & MRF delivery manifest.',
+    capabilities: [
+      'OR-Tools dynamic route optimizer (-38.4% km)',
+      'Digital tare scale weight calibration',
+      'Delivery manifest signoff to MRF / recyclers'
+    ],
+    path: '/dashboard/collector'
+  },
+  {
+    role: 'recycler',
+    name: 'Reliance Circular Industries',
+    email: 'recycler@ecoloop.in',
+    volunteerId: 'VOL-2026-REC08491',
+    recyclerId: 'REC-001',
+    avatar: 'RC',
+    badge: 'Recycling Company',
+    icon: Factory,
+    color: '#F59E0B',
+    tag: 'Certified Recovery Partner',
+    description: 'Intake processing gate: B2B scrap lot auction, gross/tare weighbridge inspection & CPCB EPR credit compliance generation.',
+    capabilities: [
+      'B2B scrap lot intake gate inspection',
+      'Weighbridge gross vs tare verification',
+      'CPCB EPR credit compliance registry'
+    ],
+    path: '/dashboard/recycler'
+  },
+  {
+    role: 'hostel',
+    name: 'Rajendra Bhawan Mess',
+    email: 'hostel@ecoloop.in',
+    volunteerId: 'VOL-2026-H992A01F',
+    avatar: 'RB',
+    badge: 'Hostel / Institution',
+    icon: Building2,
+    color: '#06B6D4',
+    tag: 'Bulk Generator',
+    description: 'Mess facility console: Winnow AI food residue vision scanner, predictive meal leftover forecast, 45-day compost yield telemetry.',
+    capabilities: [
+      'Winnow AI optical food residue scanner',
+      'Predictive mess food leftover forecast',
+      '45-day organic compost yield telemetry'
+    ],
+    path: '/dashboard/hostel'
+  },
+  {
+    role: 'ngo',
+    name: 'Green Earth Foundation',
+    email: 'ngo@ecoloop.in',
+    volunteerId: 'VOL-2026-NGO7712E',
+    avatar: 'GE',
+    badge: 'NGO Partner',
+    icon: Globe,
+    color: '#10B981',
+    tag: 'Social Sustainability Partner',
+    description: 'Community environmental console: campus cleanup campaign drives, volunteer satisfaction metrics & carbon abatement analytics.',
+    capabilities: [
+      'Campus & city cleanup campaign drives',
+      'Volunteer satisfaction & diversion metrics',
+      'Environmental carbon abatement reports'
+    ],
+    path: '/dashboard/ngo'
+  }
+];
 
-const DEMO_USERS = {
-  'admin@ecoloop.in': { name: 'Priya Sharma', role: 'admin', email: 'admin@ecoloop.in', avatar: 'PS' },
-  'collector@ecoloop.in': { name: 'Ramesh Kumar', role: 'collector', email: 'collector@ecoloop.in', avatar: 'RK', collectorId: 'COL-2026-KABADI-01' },
-  'volunteer@ecoloop.in': { name: 'Ananya Deshmukh', role: 'volunteer', email: 'volunteer@ecoloop.in', avatar: 'AD', volunteerId: 'VOL-2026-E47A91BC' },
-  'recycler@ecoloop.in': { name: 'Reliance Circular Industries', role: 'recycler', email: 'recycler@ecoloop.in', avatar: 'RC', recyclerId: 'REC-001' },
-  'hostel@ecoloop.in': { name: 'Rajendra Bhawan Mess', role: 'hostel', email: 'hostel@ecoloop.in', avatar: 'RB' },
-  'ngo@ecoloop.in': { name: 'Green Earth Foundation', role: 'ngo', email: 'ngo@ecoloop.in', avatar: 'GE' },
-};
-
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { login, getDashboardPath } = useAuth();
+export default function LoginPage({ isSignupRedirect = false }) {
+  const { user, login, getDashboardPath } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    // Simulate auth network response
-    await new Promise(r => setTimeout(r, 600));
-    
-    // Check platformStore users first, then fall back to DEMO_USERS
-    const storeUser = platformStore.getUserByEmail(email.toLowerCase());
-    const demoUser = DEMO_USERS[email.toLowerCase()];
-    const user = storeUser || demoUser;
-
-    if (user && password.length >= 4) {
-      login(user);
-      toast.success(`Welcome back, ${user.name}!`);
-      navigate(getDashboardPath(user.role));
-    } else {
-      toast.error('Invalid credentials. Try a demo account below.');
-    }
-    setLoading(false);
-  };
-
-  const quickLogin = (userEmail) => {
-    const storeUser = platformStore.getUserByEmail(userEmail.toLowerCase());
-    const user = storeUser || DEMO_USERS[userEmail];
-    login(user);
-    toast.success(`Welcome, ${user.name}!`);
-    navigate(getDashboardPath(user.role));
+  const handleSelectDemo = (persona) => {
+    // Ensure persona is verified and registered in platformStore
+    const registeredUser = platformStore.ensureVolunteerRegistered(persona);
+    const activeSession = { ...persona, ...registeredUser };
+    login(activeSession);
+    toast.success(`Access granted! Welcome, ${persona.name} (${persona.badge}).`, {
+      icon: '🚀',
+      duration: 3500
+    });
+    navigate(persona.path || getDashboardPath(persona.role));
   };
 
   return (
-    <div className="auth-page">
+    <div className="auth-page demo-access-page">
       <div className="auth-bg">
         <div className="auth-orb auth-orb-1"></div>
         <div className="auth-orb auth-orb-2"></div>
       </div>
 
-      <div className="auth-container">
-        {/* Left Panel */}
-        <div className="auth-hero">
-          <Link to="/" className="auth-logo">
-            <div className="logo-icon"><Recycle size={24} /></div>
-            <span className="logo-text">Campus<span className="gradient-text">Waste</span></span>
+      <div className="demo-portal-wrapper">
+        {/* Top Header */}
+        <div className="demo-portal-top-bar">
+          <Link to="/" className="brand-link" style={{ textDecoration: 'none' }}>
+            <div className="brand-icon-box" style={{ background: 'var(--accent-green-subtle)', color: 'var(--accent-green)', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Recycle size={22} />
+            </div>
+            <div>
+              <span className="brand-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.35rem', fontWeight: 900 }}>
+                Campus<span className="gradient-text">Waste</span>
+              </span>
+              <span style={{ display: 'block', fontSize: '0.625rem', color: 'var(--text-tertiary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                AI-Powered Closed-Loop Waste Ecosystem
+              </span>
+            </div>
           </Link>
-          
-          <div className="auth-hero-content">
-            <h2>Welcome Back to<br /><span className="gradient-text">Campus Waste</span></h2>
-            <p>Sign in to continue managing your recycling operations, track impact, and contribute to the circular economy.</p>
-            
-            <div className="auth-features">
-              {['AI Waste Scanner', 'Real-time Analytics', 'Instant UPI Payments', 'EPR Compliance'].map((f, i) => (
-                <div key={i} className="auth-feature">
-                  <Sparkles size={14} />
-                  <span>{f}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="auth-hero-visual">
-            <div className="hero-circles">
-              <div className="circle circle-1"></div>
-              <div className="circle circle-2"></div>
-              <div className="circle circle-3"></div>
-            </div>
-          </div>
+          <Link to="/" className="neo-btn" style={{ fontSize: '0.8125rem', padding: '0.45rem 0.95rem' }}>
+            <ArrowLeft size={15} /> Back to Overview
+          </Link>
         </div>
 
-        {/* Right Panel - Form */}
-        <div className="auth-form-panel">
-          <div className="auth-form-wrapper">
-            <div className="auth-form-header">
-              <h1>Sign In</h1>
-              <p>Enter your credentials to access your dashboard</p>
+        {/* Notice Banner: Registration & Manual Password Logins Paused */}
+        <div className="demo-notice-banner">
+          <div className="demo-notice-icon">
+            <Lock size={18} />
+          </div>
+          <div className="demo-notice-content">
+            <div className="demo-notice-title">
+              {isSignupRedirect
+                ? 'Public Registration Paused for Hackathon Prototype'
+                : 'Manual Sign-In & Password Logins Paused'}
+              <span className="demo-status-pill">Instant Demo Mode Active</span>
             </div>
-
-            <form onSubmit={handleLogin} className="auth-form">
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <div className="input-with-icon">
-                  <Mail size={18} />
-                  <input
-                    type="email"
-                    className="form-input"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Password</label>
-                <div className="input-with-icon">
-                  <Lock size={18} />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="form-input"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                  />
-                  <button type="button" className="input-toggle" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <label className="checkbox-label">
-                  <input type="checkbox" />
-                  <span>Remember me</span>
-                </label>
-                <a href="#" className="form-link">Forgot password?</a>
-              </div>
-
-              <button type="submit" className="btn btn-primary btn-lg auth-submit" disabled={loading}>
-                {loading ? (
-                  <div className="spinner"></div>
-                ) : (
-                  <>Sign In <ArrowRight size={18} /></>
-                )}
-              </button>
-            </form>
-
-            <div className="auth-divider">
-              <span>Quick Demo Access</span>
-            </div>
-
-            <div className="demo-accounts">
-              {Object.entries(DEMO_USERS).map(([email, user]) => (
-                <button key={email} className="demo-account-btn" onClick={() => quickLogin(email)}>
-                  <div className={`avatar avatar-sm bg-${user.role}`}>{user.avatar}</div>
-                  <div className="demo-account-info">
-                    <span className="demo-account-name">{user.name}</span>
-                    <span className="demo-account-role">{user.role}</span>
-                  </div>
-                  <ArrowRight size={14} />
-                </button>
-              ))}
-            </div>
-
-            <p className="auth-switch">
-              Don't have an account? <Link to="/signup">Create Account</Link>
+            <p className="demo-notice-sub">
+              To provide evaluators and hackathon judges immediate, zero-friction exploration with rich real-time data, traditional email/password input is paused. Select any of the <strong>6 verified role consoles</strong> below to launch its dashboard instantly with 1 click.
             </p>
           </div>
         </div>
+
+        {/* Currently Active Banner if already logged in */}
+        {user && (
+          <div className="current-user-active-bar">
+            <span>Currently Active Session: <strong>{user.name}</strong> ({user.role?.toUpperCase()})</span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="neo-btn neo-btn-primary"
+                style={{ fontSize: '0.78rem', padding: '0.35rem 0.85rem' }}
+                onClick={() => navigate(getDashboardPath(user.role))}
+              >
+                Open Active Console <ArrowRight size={13} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Demo Personas Grid */}
+        <div className="demo-personas-grid">
+          {DEMO_PERSONAS.map((persona) => {
+            const Icon = persona.icon;
+            const isCurrent = user?.email === persona.email;
+            return (
+              <div
+                key={persona.email}
+                className={`demo-card modern-card ${isCurrent ? 'active-demo-card' : ''}`}
+                onClick={() => handleSelectDemo(persona)}
+              >
+                <div className="demo-card-header">
+                  <div className="demo-avatar" style={{ background: `${persona.color}20`, color: persona.color, border: `1.5px solid ${persona.color}40` }}>
+                    {persona.avatar}
+                  </div>
+                  <div className="demo-header-info">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <span className="demo-role-badge" style={{ background: `${persona.color}15`, color: persona.color, border: `1px solid ${persona.color}35` }}>
+                        <Icon size={13} /> {persona.badge}
+                      </span>
+                      {isCurrent && (
+                        <span className="demo-current-tag">
+                          <CheckCircle2 size={12} /> Active Now
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="demo-user-name">{persona.name}</h3>
+                    <div className="demo-user-email">{persona.email}</div>
+                  </div>
+                </div>
+
+                <div className="demo-capabilities-list">
+                  {persona.capabilities.map((cap, i) => (
+                    <div key={i} className="demo-capability-item">
+                      <span className="cap-bullet" style={{ background: persona.color }}></span>
+                      <span>{cap}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="demo-card-footer">
+                  <button
+                    className="modern-btn modern-btn-primary demo-launch-btn"
+                    style={{
+                      width: '100%',
+                      background: `linear-gradient(135deg, ${persona.color}, ${persona.color}dd)`,
+                      boxShadow: `0 4px 14px ${persona.color}30`
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectDemo(persona);
+                    }}
+                  >
+                    <span>Launch {persona.badge}</span>
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Quick Direct Module Launchers */}
+        <div className="demo-direct-launchers">
+          <span className="direct-launchers-label">Direct Feature Access:</span>
+          <div className="direct-launchers-row">
+            <Link to="/dashboard/scanner" className="neo-btn" style={{ fontSize: '0.8rem' }}>
+              <Camera size={15} /> AI Camera Vision Scanner
+            </Link>
+            <Link to="/dashboard/tracking" className="neo-btn" style={{ fontSize: '0.8rem' }}>
+              <Truck size={15} /> Conveyor &amp; Fleet Telematics
+            </Link>
+            <Link to="/dashboard/machine" className="neo-btn" style={{ fontSize: '0.8rem' }}>
+              <Factory size={15} /> EcoSynthesizer Up-Cycling
+            </Link>
+            <Link to="/dashboard/marketplace" className="neo-btn" style={{ fontSize: '0.8rem' }}>
+              <Sparkles size={15} /> Scrap Lot Marketplace
+            </Link>
+          </div>
+        </div>
+
       </div>
     </div>
   );

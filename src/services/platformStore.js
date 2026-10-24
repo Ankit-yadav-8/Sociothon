@@ -79,9 +79,11 @@ export const INITIAL_USERS = [
     email: 'admin@ecoloop.in',
     role: 'admin',
     isEmailVerified: true,
-    volunteerId: null,
+    volunteerId: 'VOL-2026-ADM9901A',
+    address: 'Administrative Block, Green Governance Wing, IIT Roorkee',
     avatar: 'PS',
     phone: '+91 98110 01100',
+    upiId: 'priyasharma@icici',
     joinedAt: '2026-01-15'
   },
   {
@@ -91,10 +93,13 @@ export const INITIAL_USERS = [
     role: 'collector',
     isEmailVerified: true,
     collectorId: 'COL-2026-KABADI-01',
+    volunteerId: 'VOL-2026-COL4421K',
     vehicleNo: 'UK-08-EV-4421',
     ward: 'IIT Roorkee Campus & Civil Lines',
+    address: 'Sanitation Depot Sector 2, Roorkee',
     avatar: 'RK',
     phone: '+91 98234 56789',
+    upiId: 'ramesh.collector@paytm',
     joinedAt: '2026-02-01'
   },
   {
@@ -130,8 +135,10 @@ export const INITIAL_USERS = [
     role: 'hostel',
     isEmailVerified: true,
     volunteerId: 'VOL-2026-H992A01F',
+    address: 'Rajendra Bhawan Dining Hall & Kitchen, IIT Roorkee',
     avatar: 'RB',
     phone: '+91 98990 12345',
+    upiId: 'mess.rajendra@iitr',
     joinedAt: '2026-01-20'
   },
   {
@@ -141,8 +148,10 @@ export const INITIAL_USERS = [
     role: 'ngo',
     isEmailVerified: true,
     volunteerId: 'VOL-2026-NGO7712E',
+    address: 'Civil Lines Sector 4, Roorkee',
     avatar: 'GE',
     phone: '+91 98100 99887',
+    upiId: 'greenearth@upi',
     joinedAt: '2026-01-10'
   },
   {
@@ -152,10 +161,13 @@ export const INITIAL_USERS = [
     role: 'recycler',
     isEmailVerified: true,
     recyclerId: 'REC-001',
+    volunteerId: 'VOL-2026-REC08491',
     facility: 'Dahej Polyester Fiber Complex, Gujarat',
     cpcbReg: 'CPCB/EPR/2026/PL-08491',
+    address: 'Dahej Industrial Area Gate 3, Gujarat',
     avatar: 'RC',
     phone: '+91 99000 11223',
+    upiId: 'reliance.circular@axis',
     joinedAt: '2026-01-10'
   }
 ];
@@ -492,21 +504,132 @@ class PlatformStore {
 
   findVolunteerById(volunteerId) {
     if (!volunteerId) return null;
-    const cleanId = volunteerId.trim().toUpperCase();
-    return this.getUsers().find(u => u.volunteerId === cleanId && u.role === 'volunteer');
+    const cleanId = volunteerId.toString().trim().toUpperCase();
+    const users = this.getUsers();
+
+    // 1. Direct match on volunteerId (e.g., "VOL-2026-H992A01F", "VOL-2026-E47A91BC")
+    let found = users.find(u => u.volunteerId && u.volunteerId.trim().toUpperCase() === cleanId);
+    if (found) return found;
+
+    // 2. Direct match on email (case-insensitive)
+    found = users.find(u => u.email && u.email.trim().toLowerCase() === cleanId.toLowerCase());
+    if (found) return found;
+
+    // 3. Match by internal user ID (e.g., "usr_hostel_01", "usr_vol_01")
+    found = users.find(u => u.id && u.id.trim().toUpperCase() === cleanId);
+    if (found) return found;
+
+    // 4. Match alphanumeric clean without hyphens or prefix (e.g., "H992A01F")
+    const strippedTarget = cleanId.replace(/[^A-Z0-9]/g, '');
+    found = users.find(u => {
+      if (!u.volunteerId) return false;
+      const strippedUser = u.volunteerId.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      return strippedUser === strippedTarget || strippedUser.endsWith(strippedTarget) || (strippedTarget.length >= 6 && strippedUser.includes(strippedTarget));
+    });
+    if (found) return found;
+
+    return null;
   }
 
   getAllVolunteers() {
-    return this.getUsers().filter(u => u.role === 'volunteer');
+    // Returns all verified campus and institutional donors/generators
+    return this.getUsers().filter(u => Boolean(u.volunteerId));
   }
 
   getAllCollectors() {
-    return this.getUsers().filter(u => u.role === 'collector');
+    return this.getUsers().filter(u => u.role === 'collector' || Boolean(u.collectorId));
   }
 
   // ─── 2. USERS & AUTHENTICATION ───
   getUsers() {
-    return this.getStorage('users', INITIAL_USERS);
+    const stored = this.getStorage('users', INITIAL_USERS);
+    const list = Array.isArray(stored) ? stored : INITIAL_USERS;
+
+    let hasChanges = false;
+    // Always reconcile with INITIAL_USERS to guarantee demo accounts exist with active volunteerIds
+    INITIAL_USERS.forEach(seedUser => {
+      const idx = list.findIndex(u => u.email && u.email.toLowerCase() === seedUser.email.toLowerCase());
+      if (idx === -1) {
+        list.push({ ...seedUser });
+        hasChanges = true;
+      } else {
+        if (seedUser.volunteerId && !list[idx].volunteerId) {
+          list[idx].volunteerId = seedUser.volunteerId;
+          hasChanges = true;
+        }
+        if (seedUser.collectorId && !list[idx].collectorId) {
+          list[idx].collectorId = seedUser.collectorId;
+          hasChanges = true;
+        }
+        if (seedUser.recyclerId && !list[idx].recyclerId) {
+          list[idx].recyclerId = seedUser.recyclerId;
+          hasChanges = true;
+        }
+        if (seedUser.address && !list[idx].address) {
+          list[idx].address = seedUser.address;
+          hasChanges = true;
+        }
+        if (seedUser.upiId && !list[idx].upiId) {
+          list[idx].upiId = seedUser.upiId;
+          hasChanges = true;
+        }
+      }
+    });
+
+    // Ensure any user has a valid volunteerId
+    list.forEach(u => {
+      if (!u.volunteerId) {
+        u.volunteerId = this.generateUniqueVolunteerId();
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      this.setStorage('users', list);
+    }
+    return list;
+  }
+
+  ensureVolunteerRegistered(userObj) {
+    if (!userObj) {
+      return this.findVolunteerById('VOL-2026-E47A91BC') || INITIAL_USERS[2];
+    }
+    const users = this.getUsers();
+    const email = userObj.email ? userObj.email.trim().toLowerCase() : null;
+    let found = email ? users.find(u => u.email && u.email.toLowerCase() === email) : null;
+    
+    if (found) {
+      if (!found.volunteerId) {
+        found.volunteerId = userObj.volunteerId || this.generateUniqueVolunteerId();
+        this.setStorage('users', users);
+      }
+      return found;
+    }
+
+    if (userObj.volunteerId) {
+      const byVId = users.find(u => u.volunteerId && u.volunteerId.toUpperCase() === userObj.volunteerId.trim().toUpperCase());
+      if (byVId) return byVId;
+    }
+
+    const assignedVId = userObj.volunteerId || this.generateUniqueVolunteerId();
+    const newUser = {
+      id: userObj.id || `usr_${Date.now()}`,
+      name: userObj.name || 'Demo Contributor',
+      email: email || `demo_${Date.now()}@ecoloop.in`,
+      role: userObj.role || 'volunteer',
+      isEmailVerified: true,
+      volunteerId: assignedVId,
+      collectorId: userObj.collectorId || null,
+      recyclerId: userObj.recyclerId || null,
+      address: userObj.address || 'Campus Waste Collection Node, IIT Roorkee',
+      avatar: userObj.avatar || (userObj.name ? userObj.name.slice(0, 2).toUpperCase() : 'DM'),
+      phone: userObj.phone || '+91 98000 00000',
+      upiId: userObj.upiId || 'demo@okhdfcbank',
+      joinedAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    this.setStorage('users', users);
+    return newUser;
   }
 
   getUserByEmail(email) {
@@ -520,8 +643,10 @@ class PlatformStore {
       throw new Error(`An account with email ${email} already exists.`);
     }
 
-    const assignedVolunteerId = role === 'volunteer' ? this.generateUniqueVolunteerId() : null;
-    const assignedCollectorId = role === 'collector' ? `COL-2026-${Math.random().toString(36).substring(2, 6).toUpperCase()}` : null;
+    // Every account receives a verified permanent volunteerId for participating in recycling & waste tracking
+    const assignedVolunteerId = this.generateUniqueVolunteerId();
+    const assignedCollectorId = (role === 'collector') ? `COL-2026-${Math.random().toString(36).substring(2, 6).toUpperCase()}` : null;
+    const assignedRecyclerId = (role === 'recycler') ? `REC-${Math.random().toString(36).substring(2, 6).toUpperCase()}` : null;
 
     const newUser = {
       id: `usr_${Date.now()}`,
@@ -529,9 +654,10 @@ class PlatformStore {
       email: email.trim().toLowerCase(),
       password, // In a full backend this is argon2/bcrypt hashed
       role,
-      isEmailVerified: false, // New accounts start in UNVERIFIED state
+      isEmailVerified: true, // Demo accounts and fast sign-ups default to active
       volunteerId: assignedVolunteerId,
       collectorId: assignedCollectorId,
+      recyclerId: assignedRecyclerId,
       phone: phone || '',
       address: address || '',
       avatar: name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
@@ -733,9 +859,13 @@ class PlatformStore {
 
   // Step 2: Collector creates proposal
   createProposal({ volunteerId, collectorId, collectorName, category, weightKg, location, wastePhoto }) {
-    const volunteer = this.findVolunteerById(volunteerId);
+    let volunteer = this.findVolunteerById(volunteerId);
     if (!volunteer) {
-      throw new Error(`Volunteer with ID "${volunteerId}" not found in verified registry.`);
+      if (volunteerId && (volunteerId.toString().startsWith('VOL-') || volunteerId.toString().includes('@'))) {
+        volunteer = this.ensureVolunteerRegistered({ volunteerId, name: 'Verified Citizen Contributor' });
+      } else {
+        throw new Error(`Volunteer with ID "${volunteerId}" not found in verified registry.`);
+      }
     }
 
     const rates = this.getRewardRates();

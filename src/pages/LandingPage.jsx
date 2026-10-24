@@ -9,7 +9,7 @@ import {
   Sliders, ChevronDown, HelpCircle, ExternalLink, QrCode,
   FileText, ShieldCheck, Clock, MapPin, Copy, AlertTriangle,
   Cpu, Factory, Package, Flame, Eye, Lock, ArrowUpRight,
-  CheckCircle, Database, Search, ArrowDown
+  CheckCircle, Database, Search, ArrowDown, Menu, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './LandingPage.css';
@@ -318,6 +318,7 @@ export default function LandingPage() {
   // Dropdown states for navbar consolidation
   const [consolesOpen, setConsolesOpen] = useState(false);
   const [platformOpen, setPlatformOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Active waste item in sandbox
   const currentItem = DEMO_WASTE_ITEMS[selectedItemIdx];
@@ -486,19 +487,122 @@ export default function LandingPage() {
             </button>
 
             {user ? (
-              <Link to={getDashboardPath(user.role)} className="modern-btn modern-btn-primary">
+              <Link to={getDashboardPath(user.role)} className="modern-btn modern-btn-primary nav-action-btn">
                 Open Console <ArrowRight size={15} />
               </Link>
             ) : (
               <>
-                <Link to="/login" className="modern-btn">Sign In</Link>
-                <Link to="/signup" className="modern-btn modern-btn-primary">
-                  Get Started <ArrowRight size={15} />
+                <Link to="/login" className="modern-btn nav-action-btn nav-login-btn">Demo Accounts</Link>
+                <Link to="/login" className="modern-btn modern-btn-primary nav-action-btn">
+                  Launch Console <ArrowRight size={15} />
                 </Link>
               </>
             )}
+
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="modern-circle-btn mobile-menu-toggle"
+              aria-label="Toggle Navigation Menu"
+              title="Toggle Menu"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="landing-mobile-drawer">
+            <div className="mobile-drawer-section">
+              <div className="mobile-drawer-title">Consoles &amp; Portals</div>
+              <div className="mobile-drawer-grid">
+                <Link to="/dashboard/volunteer" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>🌱</span>
+                  <div>
+                    <strong>Volunteer Portal</strong>
+                    <small>Permanent ID &amp; Green Points</small>
+                  </div>
+                </Link>
+                <Link to="/dashboard/collector" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>🚛</span>
+                  <div>
+                    <strong>Collector Worklist</strong>
+                    <small>Tare Scale &amp; Route Logistics</small>
+                  </div>
+                </Link>
+                <Link to="/dashboard/recycler" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>🏭</span>
+                  <div>
+                    <strong>Recycler Gate</strong>
+                    <small>Intake &amp; Verification</small>
+                  </div>
+                </Link>
+                <Link to="/dashboard/admin" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>🛡️</span>
+                  <div>
+                    <strong>Admin Console</strong>
+                    <small>SHA-256 Audits &amp; Payouts</small>
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            <div className="mobile-drawer-section">
+              <div className="mobile-drawer-title">Platform Features</div>
+              <div className="mobile-drawer-grid">
+                <Link to="/dashboard/scanner" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>📷</span>
+                  <div>
+                    <strong>AI Camera Scanner</strong>
+                    <small>Live Segregation &amp; Detection</small>
+                  </div>
+                </Link>
+                <a href="#interactive-demo" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>⚡</span>
+                  <div>
+                    <strong>Interactive Sandbox</strong>
+                    <small>5-Step Live Simulation</small>
+                  </div>
+                </a>
+                <a href="#five-loops" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>🔄</span>
+                  <div>
+                    <strong>5 Circular Loops</strong>
+                    <small>Material &amp; Energy Flow</small>
+                  </div>
+                </a>
+                <a href="#aiml-framework" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>🤖</span>
+                  <div>
+                    <strong>7 AI/ML Engines</strong>
+                    <small>Grad-CAM, OR-Tools, LightGBM</small>
+                  </div>
+                </a>
+                <a href="#problem-matrix" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span>📊</span>
+                  <div>
+                    <strong>Solutions Matrix</strong>
+                    <small>Architecture vs Legacy Systems</small>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <div className="mobile-drawer-actions">
+              {user ? (
+                <Link to={getDashboardPath(user.role)} className="modern-btn modern-btn-primary" style={{ width: '100%' }} onClick={() => setMobileMenuOpen(false)}>
+                  Open Active Console <ArrowRight size={15} />
+                </Link>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%' }}>
+                  <Link to="/login" className="modern-btn" style={{ width: '100%' }} onClick={() => setMobileMenuOpen(false)}>Demo Roles</Link>
+                  <Link to="/login" className="modern-btn modern-btn-primary" style={{ width: '100%' }} onClick={() => setMobileMenuOpen(false)}>Launch Console</Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ═══════════════════════════════════════════════════════════
@@ -760,7 +864,7 @@ export default function LandingPage() {
         </div>
 
         {/* Why AI/ML is Essential Callout */}
-        <div style={{ marginTop: '2.5rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+        <div className="responsive-grid-3" style={{ marginTop: '2.5rem' }}>
           <div className="modern-card" style={{ padding: '1.25rem' }}>
             <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Eye size={16} color="var(--accent-green)" /> Computer Vision
@@ -842,7 +946,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.5rem' }}>
+              <div className="responsive-grid-2" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '12px' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Task Specification</div>
                   <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
@@ -1210,7 +1314,7 @@ export default function LandingPage() {
                   <span className="modern-badge neo-badge-green">-38.4% Distance</span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                <div className="responsive-grid-2" style={{ marginBottom: '1.25rem' }}>
                   <div style={{ padding: '1rem', borderRadius: '10px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Fixed Baseline Route</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-red)' }}>14.2 km</div>
@@ -1395,7 +1499,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '2.5rem' }}>
+        <div className="responsive-grid-2" style={{ marginTop: '2.5rem' }}>
           {SUB_THEMES.map(theme => (
             <div key={theme.id} className="modern-card" style={{ padding: '1.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>

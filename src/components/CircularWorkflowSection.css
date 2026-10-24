@@ -556,6 +556,55 @@
   }
 }
 
+@media (max-width: 768px) {
+  .circular-workflow-section {
+    margin: 2rem 0.5rem;
+    padding: 1.75rem 1rem 2.25rem 1rem;
+    border-radius: 20px;
+  }
+  .workflow-main-title {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+  .workflow-controller-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.85rem;
+    gap: 0.75rem;
+  }
+  .controller-btns-group {
+    justify-content: center;
+    width: 100%;
+  }
+  .workflow-footer-row {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-vertical-workflow {
+    padding-left: 0;
+  }
+  .mobile-vertical-track {
+    left: 18px;
+  }
+  .mobile-role-badge-anchor {
+    left: 0;
+    width: 36px;
+    height: 36px;
+  }
+  .mobile-card-row {
+    padding-left: 34px;
+  }
+  .mobile-role-card {
+    padding: 1rem 0.75rem;
+    border-radius: 14px;
+  }
+}
+
 @media (min-width: 993px) {
   .mobile-vertical-workflow {
     display: none;

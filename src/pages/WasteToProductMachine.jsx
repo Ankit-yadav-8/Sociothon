@@ -274,7 +274,7 @@ export default function WasteToProductMachine() {
         <div>
           
           {/* Machine Telemetry Bar */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+          <div className="responsive-grid-4" style={{ marginBottom: '2rem' }}>
             <div className="modern-card" style={{ padding: '1.25rem' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>MACHINE STATUS</div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-green)', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -309,7 +309,7 @@ export default function WasteToProductMachine() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '2rem', alignItems: 'start' }}>
+          <div className="responsive-split" style={{ alignItems: 'start' }}>
             
             {/* Left: Input Selection & Machine Chamber */}
             <div className="modern-card modern-card-lg">
@@ -376,7 +376,7 @@ export default function WasteToProductMachine() {
                 </div>
 
                 {/* 3-Stage Progress Display */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <div className="responsive-grid-3" style={{ marginBottom: '1.5rem' }}>
                   {[
                     { name: '1. Shredding', desc: 'Dual-shaft shear' },
                     { name: '2. Thermal Melt', desc: 'Moisture/extrusion' },
@@ -527,7 +527,7 @@ export default function WasteToProductMachine() {
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
+            <div className="responsive-grid-4">
               {GARBAGE_HUBS.map(hub => (
                 <div key={hub.id} className="modern-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>

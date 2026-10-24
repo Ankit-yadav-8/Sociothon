@@ -170,8 +170,8 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/login" element={user ? <Navigate to={getDashboardPath(user.role)} replace /> : <LoginPage />} />
-            <Route path="/signup" element={user ? <Navigate to={getDashboardPath(user.role)} replace /> : <SignupPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
             
             <Route path="/dashboard" element={user ? <DashboardLayout /> : <Navigate to="/login" replace />}>
               <Route index element={<Navigate to={getDashboardPath(user?.role)} replace />} />

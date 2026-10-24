@@ -45,10 +45,26 @@ app.post('/api/collections/proposal', async (req, res) => {
   try {
     const { volunteerId, collectorId, collectorName, category, categoryName, ratePerKg, proposedWeightKg, location, wastePhoto } = req.body;
     
-    // Look up volunteer
-    const volunteer = await User.findOne({ volunteerId });
-    if (!volunteer) {
-      return res.status(404).json({ error: `Volunteer with ID "${volunteerId}" not found.` });
+    // Look up volunteer with case-insensitive / email fallback
+    let volunteer = await User.findOne({ volunteerId });
+    if (!volunteer && volunteerId) {
+      volunteer = await User.findOne({
+        $or: [
+          { volunteerId: new RegExp(`^${volunteerId.trim()}$`, 'i') },
+          { email: volunteerId.trim().toLowerCase() }
+        ]
+      });
+    }
+    if (!volunteer && volunteerId) {
+      // Auto-register demo account in Mongo
+      volunteer = new User({
+        name: 'Verified Contributor',
+        email: `${volunteerId.toLowerCase().replace(/[^a-z0-9]/g, '')}@ecoloop.in`,
+        role: 'volunteer',
+        volunteerId: volunteerId.trim().toUpperCase(),
+        isEmailVerified: true
+      });
+      await volunteer.save();
     }
 
     const estReward = parseFloat((parseFloat(proposedWeightKg) * parseFloat(ratePerKg)).toFixed(2));
@@ -207,7 +223,14 @@ app.post('/api/collections/:id/disburse-payment', async (req, res) => {
 // ─── Volunteer ID Search ───
 app.get('/api/users/volunteer/:volunteerId', async (req, res) => {
   try {
-    const volunteer = await User.findOne({ volunteerId: req.params.volunteerId.toUpperCase() });
+    const vId = req.params.volunteerId.trim();
+    let volunteer = await User.findOne({
+      $or: [
+        { volunteerId: vId.toUpperCase() },
+        { volunteerId: new RegExp(`^${vId}$`, 'i') },
+        { email: vId.toLowerCase() }
+      ]
+    });
     if (!volunteer) {
       return res.status(404).json({ error: 'Volunteer not found.' });
     }
@@ -228,6 +251,7 @@ app.post('/api/seed', async (req, res) => {
           name: 'Priya Sharma',
           email: 'admin@ecoloop.in',
           role: 'admin',
+          volunteerId: 'VOL-2026-ADM9901A',
           isEmailVerified: true,
           avatar: 'PS'
         },
@@ -236,6 +260,7 @@ app.post('/api/seed', async (req, res) => {
           email: 'collector@ecoloop.in',
           role: 'collector',
           collectorId: 'COL-2026-KABADI-01',
+          volunteerId: 'VOL-2026-COL4421K',
           vehicleNo: 'UK-08-EV-4421',
           isEmailVerified: true,
           avatar: 'RK'
@@ -250,10 +275,29 @@ app.post('/api/seed', async (req, res) => {
           avatar: 'AD'
         },
         {
+          name: 'Rajendra Bhawan Mess Manager',
+          email: 'hostel@ecoloop.in',
+          role: 'hostel',
+          volunteerId: 'VOL-2026-H992A01F',
+          address: 'Rajendra Bhawan Dining Hall & Kitchen, IIT Roorkee',
+          isEmailVerified: true,
+          avatar: 'RB'
+        },
+        {
+          name: 'Green Earth Foundation',
+          email: 'ngo@ecoloop.in',
+          role: 'ngo',
+          volunteerId: 'VOL-2026-NGO7712E',
+          address: 'Civil Lines Sector 4, Roorkee',
+          isEmailVerified: true,
+          avatar: 'GE'
+        },
+        {
           name: 'Reliance Circular Industries',
           email: 'recycler@ecoloop.in',
           role: 'recycler',
           recyclerId: 'REC-001',
+          volunteerId: 'VOL-2026-REC08491',
           address: 'Dahej Polyester Fiber Complex, Gujarat',
           isEmailVerified: true,
           avatar: 'RC'

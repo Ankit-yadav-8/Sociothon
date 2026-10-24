@@ -67,7 +67,7 @@ export default function Pickups() {
       </div>
 
       {/* Main Grid: Booking Form & Live Scrap Price Board */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.25fr) minmax(320px, 1fr)', gap: '1.75rem' }}>
+      <div className="responsive-two-col">
         
         {/* Left Column: Schedule Doorstep Pickup */}
         <div className="neo-card">

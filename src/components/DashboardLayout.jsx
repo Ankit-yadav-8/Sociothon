@@ -51,11 +51,17 @@ const getNavItems = (role) => {
 export default function DashboardLayout() {
   const { user, login, logout, getDashboardPath } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth > 768);
   const [profileOpen, setProfileOpen] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('ecoloop_theme') || 'light');
   const [roleSwitchOpen, setRoleSwitchOpen] = useState(false);
+
+  // Auto-close sidebar on route change on mobile
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -222,41 +228,41 @@ export default function DashboardLayout() {
         
         {/* Header */}
         <header className="dashboard-header">
-          <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <button className="neo-circle-btn mobile-menu" style={{ width: '38px', height: '38px' }} onClick={() => setSidebarOpen(true)} title="Open navigation drawer">
+          <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <button className="neo-circle-btn mobile-menu" style={{ width: '38px', height: '38px', flexShrink: 0 }} onClick={() => setSidebarOpen(true)} title="Open navigation drawer">
               <Menu size={18} />
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="font-display" style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0 }}>
+              <span className="font-display" style={{ fontWeight: 800, fontSize: '1.15rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                 Campus<span style={{ color: 'var(--neo-green-dark)' }}>Waste</span>
               </span>
-              <span className="neo-badge neo-badge-green" style={{ fontSize: '0.72rem', padding: '0.2rem 0.6rem' }}>
+              <span className="neo-badge neo-badge-green header-badge" style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem', whiteSpace: 'nowrap' }}>
                 {roleLabels[user?.role] || user?.role}
               </span>
             </div>
           </div>
 
-          <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {/* Unified Role Switcher Dropdown */}
-            <div style={{ position: 'relative' }}>
+            <div className="header-role-container" style={{ position: 'relative' }}>
               <button
                 onClick={() => setRoleSwitchOpen(!roleSwitchOpen)}
-                className="neo-btn"
+                className="neo-btn header-role-btn"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.45rem 0.85rem',
+                  gap: '0.4rem',
+                  padding: '0.45rem 0.75rem',
                   fontSize: '0.8125rem',
                   fontWeight: 700
                 }}
                 title="Switch Dashboard Console"
               >
                 <span>
-                  {user?.role === 'volunteer' && '🌱 Volunteer Console'}
-                  {user?.role === 'collector' && '🚛 Collector Worklist'}
-                  {user?.role === 'recycler' && '🏭 Recycler Gate'}
-                  {user?.role === 'admin' && '🛡️ Admin Console'}
+                  {user?.role === 'volunteer' && '🌱 Volunteer'}
+                  {user?.role === 'collector' && '🚛 Collector'}
+                  {user?.role === 'recycler' && '🏭 Recycler'}
+                  {user?.role === 'admin' && '🛡️ Admin'}
                 </span>
                 <ChevronDown size={14} style={{ transform: roleSwitchOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
@@ -313,7 +319,7 @@ export default function DashboardLayout() {
             </div>
 
             {/* Quick Action: Open AI Scanner */}
-            <NavLink to="/dashboard/scanner" className="neo-btn" style={{ padding: '0.45rem 0.85rem', fontSize: '0.8125rem' }}>
+            <NavLink to="/dashboard/scanner" className="neo-btn header-scanner-link" style={{ padding: '0.45rem 0.85rem', fontSize: '0.8125rem' }}>
               <Camera size={15} /> AI Scanner
             </NavLink>
 

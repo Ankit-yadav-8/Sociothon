@@ -120,7 +120,7 @@ export default function HostelDashboard() {
 
       {/* Tab 1: Food & Commercial Kitchen AI */}
       {activeTab === 'food' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.25fr) minmax(320px, 1fr)', gap: '1.75rem' }}>
+        <div className="responsive-two-col">
           
           <div className="neo-card">
             <h2 className="font-display" style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.75rem' }}>

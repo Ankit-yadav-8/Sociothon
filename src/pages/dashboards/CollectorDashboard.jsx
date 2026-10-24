@@ -346,7 +346,7 @@ export default function CollectorDashboard() {
       </div>
 
       {/* Main Grid: Form on Left, Proposals List on Right */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.15fr) minmax(320px, 1.35fr)', gap: '1.75rem' }}>
+      <div className="responsive-two-col">
         
         {/* Left Column: Create Garbage Collection Record & Proposal */}
         <div className="neo-card" style={{ display: 'flex', flexDirection: 'column' }}>

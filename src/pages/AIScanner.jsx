@@ -1012,7 +1012,7 @@ export default function AIScanner() {
       {/* ═══════════════════════════════════════════════════════════
           MODULE 2 & 3: AI CAMERA VIEWFINDER & TACTILE GUIDANCE (BALANCED 50/50)
           ═══════════════════════════════════════════════════════════ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.75rem', alignItems: 'start' }}>
+      <div className="scanner-hero-grid">
         
         {/* Left Column: AI Camera Viewfinder & Circular Transformation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -2218,7 +2218,7 @@ export default function AIScanner() {
                 </div>
 
                 {/* 4-Card Clear Waste Specification Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                <div className="responsive-grid-2" style={{ gap: '0.75rem' }}>
                   <div style={{ padding: '0.85rem', borderRadius: '12px', background: 'var(--bg-secondary, rgba(255,255,255,0.04))', border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
                       <span style={{ fontSize: '1.3rem' }}>🍾</span>
